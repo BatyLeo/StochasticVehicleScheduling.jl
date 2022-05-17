@@ -1,10 +1,11 @@
-using InferOptModelZoo.VSP
+using StochasticVehicleScheduling
 using InferOpt
 using InferOpt.Testing
 
 using Flux
 using ProgressMeter
 using Random
+using UnicodePlots
 
 Random.seed!(67);
 
@@ -13,7 +14,7 @@ Random.seed!(67);
 nb_samples = 100
 nb_tasks = 20
 nb_scenarios = 10
-X, Y = VSP.generate_dataset(nb_samples; nb_tasks=nb_tasks, nb_scenarios=nb_scenarios, nb_it=10_000)
+X, Y = StochasticVehicleScheduling.generate_dataset(nb_samples; nb_tasks=nb_tasks, nb_scenarios=nb_scenarios, nb_it=10_000)
 
 X_train, X_test = train_test_split(X)
 Y_train, Y_test = train_test_split(Y)
@@ -67,5 +68,5 @@ nb_epochs = 100
 train_loop!(trainer, data_train, data_test, nb_epochs)
 
 ## Evaluation
-plot_perf(trainer)
+plot_perf(trainer; lineplot_function=lineplot)
 test_perf(trainer)
