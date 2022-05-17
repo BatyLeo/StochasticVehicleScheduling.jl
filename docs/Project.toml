@@ -1,3 +1,9 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+InferOpt = "4846b161-c94e-4150-8dac-c7ae193c601f"
+Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 StochasticVehicleScheduling = "ab8c152f-a6a0-4b8c-a4a5-6213a740788c"
+UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"

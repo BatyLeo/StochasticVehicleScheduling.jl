@@ -1,7 +1,12 @@
 using StochasticVehicleScheduling
 using Documenter
+using Literate
 
 DocMeta.setdocmeta!(StochasticVehicleScheduling, :DocTestSetup, :(using StochasticVehicleScheduling); recursive=true)
+
+jl_file = joinpath(dirname(@__DIR__), "test", "main.jl")
+md_dir = joinpath(@__DIR__, "src")
+Literate.markdown(jl_file, md_dir; documenter=true, execute=false)
 
 makedocs(;
     modules=[StochasticVehicleScheduling],
@@ -15,6 +20,12 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Stochastic Vehicle Scheduling" => [
+            "math.md",
+            "dataset.md",
+            "main.md",
+        ],
+        "API" => "api.md",
     ],
 )
 
