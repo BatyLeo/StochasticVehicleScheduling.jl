@@ -1,9 +1,10 @@
 module StochasticVehicleScheduling
 
+using Cbc
 using Distributions
 using GLPK
 using Graphs
-using Gurobi
+# using Gurobi
 using JLD2
 using JuMP
 using MetaGraphs
@@ -11,14 +12,14 @@ using Random
 using Printf
 using ProgressMeter
 
-function __init__()
-    GRB_ENV[] = Gurobi.Env()
-    return
-end
+# function __init__()
+#     GRB_ENV[] = Gurobi.Env()
+#     return
+# end
 
-gurobi_optimizer() = Gurobi.Optimizer(GRB_ENV[])
+# gurobi_optimizer() = Gurobi.Optimizer(GRB_ENV[])
 
-const GRB_ENV = Ref{Gurobi.Env}()
+# const GRB_ENV = Ref{Gurobi.Env}()
 
 include("utils/utils.jl")
 

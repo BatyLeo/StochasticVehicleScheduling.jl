@@ -7,8 +7,10 @@ The objective function is `vehicle_cost * nb_vehicles + include_delays * delay_c
 function solve_deterministic_VSP(instance::Instance; include_delays=true)
     graph = instance.graph
 
-    model = Model(gurobi_optimizer)
-    set_optimizer_attribute(model, "OutputFlag", 0)
+    model = Model(Cbc.Optimizer)
+    set_optimizer_attribute(model, "logLevel", 0)
+    #model = Model(gurobi_optimizer)
+    # set_optimizer_attribute(model, "OutputFlag", 0)
 
     nb_nodes = nv(graph)
     job_indices = 2:nb_nodes-1
@@ -48,8 +50,10 @@ end
 function easy_problem(θ::AbstractVector; instance::Instance)
     graph = instance.graph
 
-    model = Model(gurobi_optimizer)
-    set_optimizer_attribute(model, "OutputFlag", 0)
+    model = Model(Cbc.Optimizer)
+    set_optimizer_attribute(model, "logLevel", 0)
+    # model = Model(gurobi_optimizer)
+    # set_optimizer_attribute(model, "OutputFlag", 0)
 
     nb_nodes = nv(graph)
     job_indices = 2:nb_nodes-1
@@ -99,7 +103,9 @@ function solve_scenario(instance::Instance; scenario_index::Int=1)
     end
 
     # Model definition
-    model = Model(gurobi_optimizer)
+    model = Model(Cbc.Optimizer)
+    set_optimizer_attribute(model, "logLevel", 0)
+    # model = Model(gurobi_optimizer)
     # set_optimizer_attribute(model, "OutputFlag", 0)
 
     # Variables and objective function

@@ -12,7 +12,7 @@ function experiment(seed::Int)
     optimal_value, optimal_solution = solve_scenario(x)
 
     @test heuristic_value <= deterministic_value
-    @test optimal_value <= heuristic_value
+    @test optimal_value ≈ heuristic_value || optimal_value <= heuristic_value
     @test optimal_value <= deterministic_value
     @test optimal_value ≈ evaluate_solution(optimal_solution, x)
 end

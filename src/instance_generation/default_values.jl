@@ -14,7 +14,7 @@ const default_nb_tasks = 10
 const default_district_width = 10
 const default_random_inter_area_factor = LogNormal(0.02, 0.05)
 
-const ZERO_UNIFORM = LogNormal(-Inf,1.) # always returns 0
+const ZERO_UNIFORM = LogNormal(-Inf, 1.) # always returns 0
 
 const default_district_μ = Uniform(0.8, 1.2)
 const default_district_σ = Uniform(0.4, 0.6)

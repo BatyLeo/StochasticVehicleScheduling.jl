@@ -4,12 +4,12 @@
 Contains all the relevant information for an instance of the stochastic VSP problem.
 
 # Fields
-- `width::Int`: city width in minutes
+- `width::Int`: city width (in minutes)
 - `vehicle_cost::Float64`: cost of a vehicle in the objective function
 - `delay_cost::Float64`: cost of one minute delay in the objective function
 - `nb_tasks::Int`: number of tasks to fulfill
 - `tasks::Vector{Task}`: tasks list (see [`Task`](@ref)), that should be ordered by start time
-- `district_width::Int`: width in minutes of each district
+- `district_width::Int`: width (in minutes) of each district
 - `districts::Matrix{District}`: districts matrix (see [`District`](@ref)),
     indices corresponding to their relative positions
 - `random_inter_area_factor::LogNormal{Float64}`: a log-normal distribution modeling delay
@@ -19,15 +19,12 @@ Contains all the relevant information for an instance of the stochastic VSP prob
 """
 struct City
     width::Int
-
     # Objectives ponderation
     vehicle_cost::Float64
     delay_cost::Float64
-
     # Tasks
     nb_tasks::Int
     tasks::Vector{Task}
-
     # Stochastic specific stuff
     district_width::Int
     districts::Matrix{District}

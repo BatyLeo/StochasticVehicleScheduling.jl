@@ -20,11 +20,9 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "Stochastic Vehicle Scheduling" => [
-            "math.md",
-            "dataset.md",
-            "main.md",
-        ],
+        "math.md",
+        "dataset.md",
+        "main.md",
         "API" => "api.md",
     ],
 )

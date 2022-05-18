@@ -4,6 +4,7 @@ authors = ["BatyLeo and contributors"]
 version = "0.1.0"
 
 [deps]
+Cbc = "9961bab8-2fa3-5c5a-9d89-47fab24efd76"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 GLPK = "60bf3e95-4087-53dc-ae20-288a0d20c6a6"
