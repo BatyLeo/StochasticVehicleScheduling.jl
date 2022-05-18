@@ -4,7 +4,7 @@ using Literate
 
 DocMeta.setdocmeta!(StochasticVehicleScheduling, :DocTestSetup, :(using StochasticVehicleScheduling); recursive=true)
 
-jl_file = joinpath(dirname(@__DIR__), "test", "main.jl")
+jl_file = joinpath(dirname(@__DIR__), "test", "tutorial.jl")
 md_dir = joinpath(@__DIR__, "src")
 Literate.markdown(jl_file, md_dir; documenter=true, execute=false)
 

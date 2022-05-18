@@ -23,6 +23,3 @@ const default_task_μ = Uniform(1.0, 3.0)
 const default_task_σ = Uniform(0.8, 1.2)
 
 const default_nb_scenarios = 1
-
-# const GRB_ENV = Gurobi.Env()
-const GRB_ENV = Ref{Gurobi.Env}()

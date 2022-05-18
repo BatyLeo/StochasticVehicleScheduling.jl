@@ -31,10 +31,10 @@ end
     end
 
     @testset "Features" begin
-        #include("dataset.jl")
+        include("dataset.jl")
     end
 
     @testset "Tutorial" begin
-        include("main.jl")
+        include("tutorial.jl")
     end
 end

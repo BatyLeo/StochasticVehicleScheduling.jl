@@ -18,20 +18,21 @@ end
 
 gurobi_optimizer() = Gurobi.Optimizer(GRB_ENV[])
 
-include("const.jl")
-include("utils.jl")
+const GRB_ENV = Ref{Gurobi.Env}()
 
-include("task.jl")
-include("district.jl")
-include("city.jl")
+include("utils/utils.jl")
 
-include("instance.jl")
-include("solution.jl")
+include("instance_generation/default_values.jl")
+include("instance_generation/task.jl")
+include("instance_generation/district.jl")
+include("instance_generation/city.jl")
+include("instance_generation/instance.jl")
 
-include("deterministic_vsp.jl")
-include("local_search.jl")
+include("solution/solution.jl")
+include("solution/deterministic_vsp.jl")
+include("solution/local_search.jl")
 
-include("dataset.jl")
+include("dataset/dataset.jl")
 
 # Data strutures
 export create_random_city
