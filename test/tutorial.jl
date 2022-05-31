@@ -92,7 +92,8 @@ We choose a perturbed Fenchel-Young loss with parameters ``ε = 0.1`` and ``M = 
 ## Loss function
 ε = 0.1
 M = 5
-loss = FenchelYoungLoss(Perturbed(easy_problem; ε=ε, M=M))
+maximizer(θ::AbstractVector; instance::Instance) = easy_problem(θ; instance=instance, model_builder=cbc_model)
+loss = FenchelYoungLoss(PerturbedNormal(maximizer; ε=ε, M=M))
 flux_loss(x, y) = loss(model(x.features), y.value; instance=x)
 ## Optimizer
 opt = ADAM();
@@ -107,7 +108,7 @@ training_losses, test_losses = Float64[], Float64[]
 for _ in 1:nb_epochs
     l = mean(flux_loss(x, y) for (x, y) in data_train)
     l_test = mean(flux_loss(x, y) for (x, y) in data_test)
-    Y_pred = [easy_problem(model(x.features); instance=x) for x in  X_test]
+    Y_pred = [maximizer(model(x.features); instance=x) for x in  X_test]
     values = [evaluate_solution(y, x) for (x, y) in zip(X_test, Y_pred)]
     V = mean((v_pred - v) / v for (v_pred, v) in zip(values, ground_truth_obj))
     H = mean(hamming_distance(y_pred, y.value) for (y_pred, y) in zip(Y_pred, Y_test))

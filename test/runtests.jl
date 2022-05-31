@@ -2,6 +2,9 @@ using StochasticVehicleScheduling
 using Random
 using Test
 using UnicodePlots
+using Gurobi
+
+const GRB_ENV = Gurobi.Env()
 
 function short(solution::Solution)
     res = Vector{Int}[]

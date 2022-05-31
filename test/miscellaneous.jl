@@ -9,7 +9,7 @@ function experiment(seed::Int)
     _, deterministic_solution = solve_deterministic_VSP(x)
     deterministic_value = evaluate_solution(deterministic_solution, x)
 
-    optimal_value, optimal_solution = solve_scenario(x)
+    optimal_value, optimal_solution = solve_scenarios(x)
 
     @test heuristic_value <= deterministic_value
     @test optimal_value ≈ heuristic_value || optimal_value <= heuristic_value

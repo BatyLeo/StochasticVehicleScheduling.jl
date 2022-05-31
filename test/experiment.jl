@@ -11,4 +11,4 @@ heuristic_value = evaluate_solution(y, x)
 #_, deterministic_solution = solve_deterministic_VSP(x)
 #deterministic_value = evaluate_solution(deterministic_solution, x)
 
-optimal_value, optimal_solution = solve_scenario(x)
+optimal_value, optimal_solution = solve_scenarios(x)

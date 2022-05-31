@@ -36,7 +36,7 @@ function Task(;
     random_delay::LogNormal{Float64}=ZERO_UNIFORM,
 )
     return Task(type, start_point, end_point, start_time, end_time,
-        random_delay, zeros(nb_scenarios), zeros(nb_scenarios))
+        random_delay, zeros(nb_scenarios) .+ start_time, zeros(nb_scenarios) .+ end_time)
 end
 
 """

@@ -120,20 +120,31 @@ function basic_solution(instance::Instance)
     return Solution(value, basic_path_solution(graph))
 end
 
+function evaluate_task(
+    i_task::Integer,
+    instance::Instance,
+    old_task_index::Integer,
+    old_delay::Real,
+    scenario::Int,
+)
+    (; slacks, delays) = instance
+
+    delay = delays[i_task, scenario]
+    slack = slacks[old_task_index, i_task][scenario]
+
+    return delay + max(old_delay - slack, 0)
+end
+
 function evaluate_scenario(path_value::BitMatrix, instance::Instance, scenario_index::Int)
     total_delay = 0.0
-    total_time = 0.0
-    nb_tasks = get_nb_tasks(instance)
-    #nb_vehicles = get_nb_vehicles(path_value)
+    nb_tasks = instance.city.nb_tasks
+
     for i_vehicle in 1:nb_tasks
         # no delay if no tasks
         if !any(@view path_value[i_vehicle, :])
-            #@warn "There is a problem in vehicle counting..." nb_vehicles
-            #@warn "" path_value
             continue
         end
 
-        current_time = 0.0
         task_delay = 0.0
         old_task_index = 1 # always start at depot
 
@@ -142,34 +153,18 @@ function evaluate_scenario(path_value::BitMatrix, instance::Instance, scenario_i
             if !path_value[i_vehicle, i_task]
                 continue
             end
-            current_time, task_delay = evaluate_task(
+            task_delay = evaluate_task(
                 i_task+1,
-                instance.city,
+                instance,
                 old_task_index,
-                current_time,
                 task_delay,
                 scenario_index,
             )
-            #println("$old_task_index, $(i_task+1), $task_delay")
             old_task_index = i_task+1
 
             total_delay += task_delay
         end
-
-        # return to depot task
-        # current_time, task_delay = evaluate_task(
-        #     nb_tasks + 2,
-        #     instance.city,
-        #     old_task_index,
-        #     current_time,
-        #     task_delay,
-        #     scenario_index,
-        # )
-
-        # total_delay += task_delay
-        # total_time += current_time
     end
-    #println(total_delay)
     return total_delay
 end
 
@@ -198,9 +193,9 @@ function evaluate_solution(value::BitVector, instance::Instance)
     return evaluate_solution(Solution(value, instance), instance)
 end
 
-function evaluate_solution(value::AbstractVector, instance::Instance)
-    return evaluate_solution(Solution(convert(BitVector, value), instance), instance)
-end
+# function evaluate_solution(value::AbstractVector, instance::Instance)
+#     return evaluate_solution(Solution(convert(BitVector, value), instance), instance)
+# end
 
 function to_array(path_value::BitMatrix, instance::Instance)
     graph = instance.graph
