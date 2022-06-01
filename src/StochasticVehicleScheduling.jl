@@ -3,9 +3,9 @@ module StochasticVehicleScheduling
 using Cbc
 using ConstrainedShortestPaths
 using Distributions
+using GLMakie
 using GLPK
 using Graphs
-# using Gurobi
 using JLD2
 using JuMP
 using MetaGraphs
@@ -13,15 +13,6 @@ using Printf
 using ProgressMeter
 using Random
 using SparseArrays
-
-# function __init__()
-#     GRB_ENV[] = Gurobi.Env()
-#     return
-# end
-
-# gurobi_optimizer() = Gurobi.Optimizer(GRB_ENV[])
-
-# const GRB_ENV = Ref{Gurobi.Env}()
 
 include("utils/utils.jl")
 
@@ -38,6 +29,8 @@ include("solution/column_generation.jl")
 include("solution/plne.jl")
 
 include("dataset/dataset.jl")
+
+include("visualization/visualization.jl")
 
 # Data strutures
 export create_random_city
@@ -57,5 +50,8 @@ export solve_scenarios
 
 # Dataset
 export generate_dataset, save_dataset, load_dataset
+
+# Visualization
+export plot_instance, plot_solution
 
 end

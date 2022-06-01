@@ -50,4 +50,4 @@ delay = VSP.evaluate_scenario(sol, instance, 1)
 instance = create_mini_instance(10.0)
 v, sol = solve_deterministic_VSP(instance)
 delay = VSP.evaluate_scenario(sol, instance, 1)
-@test delay == 10.0
+@test delay == 20.0

@@ -294,3 +294,19 @@ function is_admissible(solution::Solution, instance::Instance)
 
     return true
 end
+
+function compute_path_list(solution::Solution)
+    (; path_value) = solution
+    paths = Vector{Int64}[]
+    for v in 1:size(path_value, 1)
+        path = [1]
+        for (i, elem) in enumerate(path_value[v, :])
+            if elem == 1
+                push!(path, i+1)
+            end
+        end
+        push!(path, size(path_value, 2)+2)
+        push!(paths, path)
+    end
+    return paths
+end
