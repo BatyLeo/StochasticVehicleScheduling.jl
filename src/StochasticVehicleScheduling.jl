@@ -32,6 +32,8 @@ include("dataset/dataset.jl")
 
 include("visualization/visualization.jl")
 
+include("training/Training.jl")
+
 # Data strutures
 export create_random_city
 export Instance, Solution

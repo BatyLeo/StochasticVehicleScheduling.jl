@@ -20,17 +20,18 @@ function grb_model()
     return model
 end
 
-function main(dataset_path="data/data.jld2")
+function main(data_file)
     Random.seed!(67);
 
     ## Dataset
-    data = load(dataset_path)["data"]
+    data = load("data/$data_file.jld2")["data"]
 
     ## GLM model and loss
     nb_features = 20
     encoder = Chain(Dense(nb_features => 1), vec)
     maximizer(θ::AbstractVector; instance::Instance) = easy_problem(θ; instance, model_builder=grb_model)
-    loss = FenchelYoungLoss(PerturbedNormal(maximizer; ε=0.1, M=5))
+    ε = 0.1
+    loss = FenchelYoungLoss(PerturbedNormal(maximizer; ε=ε, M=5))
 
     ## Training setup
     pipeline(x) = maximizer(encoder(x.features), instance=x)
@@ -47,9 +48,10 @@ function main(dataset_path="data/data.jld2")
     )
     @info "Trainer" typeof(trainer)
 
-    nb_epochs = 100
+    nb_epochs = 10
     opt = ADAM()
-    logger = TBLogger("tensorboard_logs/test_run", min_level=Logging.Info)
+    log_dir = "tensorboard_logs/FY_$(data_file)_eps$ε"
+    logger = TBLogger(log_dir, min_level=Logging.Info)
 
     # Training loop
     @showprogress for _ in 1:nb_epochs
@@ -61,6 +63,8 @@ function main(dataset_path="data/data.jld2")
     # Results
     plot_perf(trainer; lineplot_function=lineplot)
     test_perf(trainer)
+
+    #jldsave("$log_dir/model.jld2", data=encoder)
 end
 
-main("data/mono.jld2")
+@profview main("data50")

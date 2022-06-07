@@ -48,16 +48,16 @@ end
 
 Random.seed!(1)
 instance = Instance(create_random_city(
-    nb_tasks=10, nb_scenarios=100
+    nb_tasks=10, nb_scenarios=10
 ));
 
-fig = plot_instance(instance);
-display(fig)
-#@profview easy_problem(ones(ne(instance.graph)); instance);
+# fig = plot_instance(instance);
+# display(fig)
+# #@profview easy_problem(ones(ne(instance.graph)); instance);
 
-solution = heuristic_solution(instance; nb_it=10000)
-fig2 = plot_solution(solution, instance);
-display(fig2)
+# solution = heuristic_solution(instance; nb_it=10000)
+# fig2 = plot_solution(solution, instance);
+# display(fig2)
 
 #instance.delays
 

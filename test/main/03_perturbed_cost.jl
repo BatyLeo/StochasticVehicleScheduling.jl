@@ -9,17 +9,19 @@ using StochasticVehicleScheduling
 using TensorBoardLogger
 using UnicodePlots
 
-function main(dataset_path="data/data.jld2")
+function main(data_file)
     Random.seed!(67);
 
     ## Dataset
-    data = load(dataset_path)["data"];
+    data = load("data/$data_file.jld2")["data"];
 
     ## GLM model and loss
     nb_features = 20
+    ε = 1000
     encoder = Chain(Dense(nb_features => 1), vec)
+    #encoder = load("logs/FY_data100_20_eps0.1/model.jld2")["data"]
     cost(y; instance) = evaluate_solution(y, instance)
-    loss = PerturbedCost(PerturbedNormal(easy_problem; ε=1000, M=5), cost)
+    loss = PerturbedCost(PerturbedNormal(easy_problem; ε=ε, M=5), cost)
     penalty() = 1000 * sum(abs, first(encoder).weight)
 
     ## Training setup
@@ -36,9 +38,10 @@ function main(dataset_path="data/data.jld2")
     )
     @info "" typeof(trainer)
 
-    nb_epochs = 100
+    nb_epochs = 300
     opt = ADAM()
-    logger = TBLogger("tensorboard_logs/perturbed_cost50", min_level=Logging.Info)
+    log_dir = "logs/perturbed_$(data_file)_eps$(ε)_300epochs"
+    logger = TBLogger(log_dir, min_level=Logging.Info)
 
     # Training loop
     @showprogress for _ in 1:nb_epochs
@@ -51,10 +54,10 @@ function main(dataset_path="data/data.jld2")
     plot_perf(trainer; lineplot_function=lineplot)
     test_perf(trainer)
 
-    jldsave("data/model2.jld2", data=encoder)
+    jldsave("$log_dir/model.jld2", data=encoder)
 end
 
-main("data/data50.jld2")
+main("data100_20")
 
-model = load("data/model2.jld2")["data"];
-first(model).weight[1, :]
+#model = load("data/model2.jld2")["data"];
+#first(model).weight[1, :]
