@@ -1,56 +1,20 @@
-using StochasticVehicleScheduling
-using InferOpt.Testing
-using JLD2
 using Random
+using StochasticVehicleScheduling
 
 Random.seed!(67)
 
-nb_samples = 100
+
+dataset_folder = "data/data50"
 nb_tasks = 50
 nb_scenarios = 10
+city_kwargs = (; nb_tasks, nb_scenarios)
 
-X, Y = StochasticVehicleScheduling.generate_dataset(
-    nb_samples; nb_tasks=nb_tasks, nb_scenarios=nb_scenarios, nb_it=10_000
+StochasticVehicleScheduling.generate_dataset(
+    dataset_folder, 50, 50; city_kwargs
 );
-X_train, X_test = train_test_split(X);
-Y_train, Y_test = train_test_split(Y);
-data = InferOptDataset(; X_train=X_train, X_test=X_test, Y_train=Y_train, Y_test=Y_test);
+# X_train, X_test = train_test_split(X);
+# Y_train, Y_test = train_test_split(Y);
+# data = InferOptDataset(; X_train=X_train, X_test=X_test, Y_train=Y_train, Y_test=Y_test);
 
-save_path = "data/data50.jld2"
-jldsave(save_path, data=data)
-
-# ---
-
-Random.seed!(67)
-
-nb_samples = 100
-nb_tasks = 100
-nb_scenarios = 20
-
-X, Y = StochasticVehicleScheduling.generate_dataset(
-    nb_samples; nb_tasks=nb_tasks, nb_scenarios=nb_scenarios, nb_it=10_000
-);
-X_train, X_test = train_test_split(X);
-Y_train, Y_test = train_test_split(Y);
-data = InferOptDataset(; X_train=X_train, X_test=X_test, Y_train=Y_train, Y_test=Y_test);
-
-save_path = "data/data100_20.jld2"
-jldsave(save_path, data=data)
-
-# ---
-
-Random.seed!(67)
-
-nb_samples = 1
-nb_tasks = 20
-nb_scenarios = 10
-
-X, Y = StochasticVehicleScheduling.generate_dataset(
-    nb_samples; nb_tasks=nb_tasks, nb_scenarios=nb_scenarios, nb_it=10_000
-);
-X_train, X_test = X, X;
-Y_train, Y_test = Y, Y;
-data = InferOptDataset(; X_train=X_train, X_test=X_test, Y_train=Y_train, Y_test=Y_test);
-
-save_path = "data/mono.jld2"
-jldsave(save_path, data=data)
+# save_path = "data/data50.jld2"
+# jldsave(save_path, data=data)

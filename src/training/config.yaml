@@ -1,7 +1,9 @@
-log_dir: "logs"
+experiment_name: experiment
+log_dir: logs
 data:
-  data_dir: "data/data100_20.jld2"
-  train_test_split: 0.5
+  data_dir: data/data50
+  train_file: train.jld2
+  test_file: test.jld2
 training:
   nb_epochs: 100
   optimizer:

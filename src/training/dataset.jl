@@ -41,6 +41,6 @@ struct ExperienceDataset{Dx, Dy} <: AbstractDataset
     Y::Dy
 end
 
-function loss_data(dataset::SupervisedDataset)
+function loss_data(dataset::ExperienceDataset)
     return zip(dataset.X)
 end

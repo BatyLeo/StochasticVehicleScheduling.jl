@@ -1,7 +1,7 @@
 abstract type AbstractScalarMetric end
 
 function compute_value!(m::AbstractScalarMetric, t::Trainer; kwargs...)
-    push!(m.history, m(t, data; kwargs...))
+    push!(m.history, m(t; kwargs...))
 end
 
 function test_perf(metric::AbstractScalarMetric)

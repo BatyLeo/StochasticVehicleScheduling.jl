@@ -35,13 +35,25 @@ struct Trainer
 end
 
 function Trainer(config, pipeline, loss; model_builder)
-    data = namedtuple(load(config.data.data_dir))
+    (; data_dir, train_file, test_file) = config.data
+
+    train_dir = joinpath(data_dir, train_file)
+    dataset_train = load(train_dir);
+    X_train, Y_train = dataset_train["X"], dataset_train["Y"];
+
+    test_dir = joinpath(data_dir, test_file)
+    dataset_test = load(test_dir);
+    X_test, Y_test = dataset_test["X"], dataset_test["Y"];
+
+    data = (train=SupervisedDataset(X_train, Y_train), test=SupervisedDataset(X_test, Y_test))
+
     cost(y; instance) = evaluate_solution(y, instance)
-    train_metrics = Tuple(metric() for metric in config.training.metrics)
-    test_metrics = Tuple(metric() for metric in config.training.metrics)
+    metrics = [eval(Meta.parse(metric)) for metric in config.training.metrics]
+    train_metrics = Tuple(metric() for metric in metrics)
+    test_metrics = Tuple(metric() for metric in metrics)
     (; name, args) = config.training.optimizer
     opt = eval(Meta.parse(name))(args...)
-    logger = TBLogger(config.log_dir, min_level=Logging.Info)
+    logger = TBLogger(joinpath(config.log_dir, config.experiment_name), min_level=Logging.Info)
     return Trainer(
         data,
         pipeline,
@@ -67,7 +79,7 @@ function compute_metrics!(trainer::Trainer)
 end
 
 function train_loop!(trainer::Trainer, nb_epochs::Integer; show_progress=true)
-    p = Progress(nb_epochs; show_speed=true, enabled=show_progress)
+    p = Progress(nb_epochs; enabled=show_progress)
     for _ in 1:nb_epochs
         compute_metrics!(trainer)
         Flux.train!(trainer.loss, Flux.params(trainer.pipeline.encoder), loss_data(trainer.data.train), trainer.opt)
@@ -76,10 +88,10 @@ function train_loop!(trainer::Trainer, nb_epochs::Integer; show_progress=true)
 end
 
 # Specific constructors
-function FenchelYoungGLM(config::NamedTuple; model_builder=grb_model)
+function FenchelYoungGLM(config::NamedTuple; model_builder)
     nb_features = 20  # ! hardcoded
     encoder = Chain(Dense(nb_features => 1), vec)
-    maximizer(θ::AbstractVector; instance::Instance) = easy_problem(
+    maximizer(θ::AbstractVector; instance) = easy_problem(
         θ; instance, model_builder=model_builder
     )
     pipeline = Pipeline(encoder, maximizer)
