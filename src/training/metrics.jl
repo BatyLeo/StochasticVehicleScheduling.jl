@@ -21,7 +21,11 @@ Loss(name="Loss") = Loss(name, Float64[])
 
 function (m::Loss)(trainer::Trainer; train, kwargs...)
     data = train ? trainer.data.train : trainer.data.test
-    return mean(trainer.loss(t...) for t in loss_data(data))
+    @info typeof(loader(data))
+    for t in loader(data)
+        @info typeof(t) length(t)
+    end
+    return mean(trainer.loss(t...) for t in loader(data))
 end
 
 function log_last_measure!(m::Loss, logger::AbstractLogger; train=true, step_increment=0)

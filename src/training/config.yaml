@@ -1,11 +1,21 @@
-experiment_name: experiment
-log_dir: logs
 data:
   data_dir: data/data50
   train_file: train.jld2
   test_file: test.jld2
-training:
+  dataset_type: ExperienceDataset
+model:
+  name: PerturbedGLM
+  args:
+    nb_features: 20
+    ε: 0.1
+    M: 5
+    model_builder: grb_model
+train:
+  tag: experiment
+  log_dir: logs
   nb_epochs: 100
+  batchsize: 2
+  eval_every_n_steps: 1
   optimizer:
     name: ADAM
     args:

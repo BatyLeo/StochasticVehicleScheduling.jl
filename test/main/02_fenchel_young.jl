@@ -1,33 +1,20 @@
-using CUDA
-using Flux
-using Gurobi
-using InferOpt
-using JLD2
-using JuMP
-using Logging
-using ProgressMeter
 using Random
 using StochasticVehicleScheduling
 using StochasticVehicleScheduling.Training
-using TensorBoardLogger
 using UnicodePlots
 
-const GRB_ENV = Gurobi.Env()
+Random.seed!(67);
+config_file = "src/training/config.yaml"
+trainer = Trainer(config_file);
+train_loop!(trainer, 10, show_progress=true)
+plot_perf(trainer; lineplot_function=lineplot)
 
-function grb_model()
-    model = Model(() -> Gurobi.Optimizer(GRB_ENV))
-    set_optimizer_attribute(model, "OutputFlag", 0)
-    return model
+using JLD2, Flux
+dataset_train = load("data/data50/train.jld2");
+X_train, Y_train = dataset_train["X"], dataset_train["Y"];
+data = Flux.DataLoader(X_train; batchsize=1);
+dataxy = Flux.DataLoader((X_train, Y_train); batchsize=1);
+
+for d in data
+    @info length(d)
 end
-
-function main()
-    Random.seed!(67);
-
-    config = read_config("src/training/config.yaml")
-    trainer = FenchelYoungGLM(config; model_builder=grb_model)
-    train_loop!(trainer, 10)
-
-    return nothing
-end
-
-main()

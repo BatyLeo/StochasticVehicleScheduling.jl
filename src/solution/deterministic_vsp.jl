@@ -9,6 +9,12 @@ function glpk_model()
     return model
 end
 
+function grb_model()
+    model = Model(() -> Gurobi.Optimizer(GRB_ENV[]))
+    set_optimizer_attribute(model, "OutputFlag", 0)
+    return model
+end
+
 """
     solve_deterministic_VSP(instance::Instance; include_delays=true)
 

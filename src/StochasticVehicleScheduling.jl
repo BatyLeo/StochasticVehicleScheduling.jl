@@ -6,6 +6,7 @@ using Distributions
 using GLMakie
 using GLPK
 using Graphs
+using Gurobi
 using JLD2
 using JuMP
 using MetaGraphs
@@ -13,6 +14,14 @@ using Printf
 using ProgressMeter
 using Random
 using SparseArrays
+
+# Gurobi package setup (see https://github.com/jump-dev/Gurobi.jl/issues/424)
+const GRB_ENV = Ref{Gurobi.Env}()
+
+function __init__()
+    GRB_ENV[] = Gurobi.Env()
+    return
+end
 
 include("utils/utils.jl")
 
@@ -43,7 +52,7 @@ export evaluate_solution
 export Solution, solution_from_JuMP_array, basic_solution
 
 # Solvers
-export cbc_model, glpk_model
+export cbc_model, glpk_model, grb_model
 export solve_deterministic_VSP, easy_problem
 export solve_scenario, solve_scenario2, solve_scenario3
 export local_search, heuristic_solution

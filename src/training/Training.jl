@@ -15,10 +15,10 @@ using YAML
 
 include("config.jl")
 include("dataset.jl")
-#include("trainer.jl")
-include("models.jl")
+include("trainer.jl")
 include("metrics.jl")
 include("error.jl")
+include("perf.jl")
 
 dropfirstdim(z::AbstractArray) = dropdims(z; dims=1)
 make_negative(z::AbstractArray; threshold=0.) = -exp.(z) - threshold
@@ -30,7 +30,6 @@ export plot_perf, test_perf
 export dropfirstdim, make_negative
 export train_test_split
 
-#export InferOptTrainer, InferOptDataset
 export AbstractScalarMetric
 export compute_metrics!
 export Loss, HammingDistance, CostGap, ParameterError, MeanSquaredError
