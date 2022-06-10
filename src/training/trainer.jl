@@ -18,6 +18,8 @@ struct Trainer{D, P, L, C, M, O, LL}
     metrics::M
     opt::O
     logger::LL
+    log_every_n_epochs::Int
+    save_every_n_epochs::Int
 end
 
 function Trainer(config_file)#; model_builder)
@@ -55,6 +57,8 @@ function Trainer(config_file)#; model_builder)
     (; name, args) = config.train.optimizer
     opt = eval(Meta.parse(name))(args...)
 
+    (; log_every_n_epochs, save_every_n_epochs) = config.train
+
     return Trainer(
         data,
         pipeline,
@@ -63,14 +67,20 @@ function Trainer(config_file)#; model_builder)
         (train=train_metrics, test=test_metrics),
         opt,
         logger,
+        log_every_n_epochs,
+        save_every_n_epochs,
     )
 end
 
-function compute_metrics!(trainer::Trainer)
+function compute_metrics!(trainer::Trainer, n::Integer)
+    if n % trainer.log_every_n_epochs != 0
+        return nothing
+    end
+    # else
     Y_train_pred = [trainer.pipeline(x) for x in trainer.data.train.X]
     for (idx, metric) in enumerate(trainer.metrics.train)
         compute_value!(metric, trainer; train=true, Y_pred=Y_train_pred)
-        log_last_measure!(metric, trainer.logger; train=true, step_increment=(idx==1 ? 1 : 0))
+        log_last_measure!(metric, trainer.logger; train=true, step_increment=(idx==1 ? n-trainer.logger.global_step : 0))
     end
 
     Y_test_pred = [trainer.pipeline(x) for x in trainer.data.test.X]
@@ -78,6 +88,15 @@ function compute_metrics!(trainer::Trainer)
         compute_value!(metric, trainer; train=false, Y_pred=Y_test_pred)
         log_last_measure!(metric, trainer.logger; train=false, step_increment=0)
     end
+    return nothing
+end
+
+function save_model(trainer::Trainer, n::Integer)
+    if n % trainer.save_every_n_epochs != 0
+        return nothing
+    end
+    # else
+    jldsave("$(trainer.logger.logdir)/model_$n.jld2", data=trainer.pipeline.encoder)
 end
 
 function my_custom_train!(loss, ps, data, opt)
@@ -104,11 +123,12 @@ end
 
 function train_loop!(trainer::Trainer, nb_epochs::Integer; show_progress=true)
     p = Progress(nb_epochs; enabled=show_progress)
-    compute_metrics!(trainer)
-    for _ in 1:nb_epochs
+    compute_metrics!(trainer, 0)
+    for n in 1:nb_epochs
         my_custom_train!(trainer.loss, Flux.params(trainer.pipeline.encoder), trainer.data.loader, trainer.opt)
         #Flux.train!(trainer.loss, Flux.params(trainer.pipeline.encoder), loader(trainer.data.train), trainer.opt)
-        compute_metrics!(trainer)
+        compute_metrics!(trainer, n)
+        save_model(trainer, n)
         next!(p)
     end
 end
