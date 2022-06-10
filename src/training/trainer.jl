@@ -30,11 +30,11 @@ function Trainer(config_file)#; model_builder)
 
     train_dir = joinpath(data_dir, train_file)
     dataset_train = load(train_dir);
-    X_train, Y_train = dataset_train["X"], dataset_train["Y"];
+    X_train, Y_train = dataset_train["X"], dataset_train["Y"]; # TODO: remove hardcoded stuff
 
     test_dir = joinpath(data_dir, test_file)
     dataset_test = load(test_dir);
-    X_test, Y_test = dataset_test["X"], dataset_test["Y"];
+    X_test, Y_test = dataset_test["X"], dataset_test["Y"]; # TODO: remove hardcoded stuff
 
     dataset = eval(Meta.parse(dataset_type))
     data_train = dataset(X_train, Y_train)
@@ -44,7 +44,7 @@ function Trainer(config_file)#; model_builder)
 
     # Build model
     model = eval(Meta.parse(config.model.name))
-    pipeline, loss, cost = model(; config.model.args...)#, model_builder=model_builder)
+    pipeline, loss, cost = model(; config.model.args...)
 
     # Metrics
     metrics = [eval(Meta.parse(metric)) for metric in config.train.metrics]
@@ -83,9 +83,9 @@ end
 function my_custom_train!(loss, ps, data, opt)
     local training_loss
     #grad_sum = 0.0
-    for d in data
+    for batch in data
         gs = gradient(ps) do
-            training_loss = loss(d...) #mean(loss(t...) for t in zip(d))
+            training_loss = loss(batch...)
             return training_loss
         end
         # n = 0
@@ -122,7 +122,6 @@ function FenchelYoungGLM(; nb_features, ε, M, model_builder::String)
     pipeline = Pipeline(encoder, maximizer)
 
     loss = FenchelYoungLoss(PerturbedNormal(maximizer; ε, M))
-    #pipeline_loss(x, y) = loss(encoder(x.features), y.value; instance=x)
     pipeline_loss(X, Y) = mean(loss(encoder(x.features), y.value; instance=x) for (x, y) in zip(X, Y))
 
     cost(y; instance) = evaluate_solution(y, instance)

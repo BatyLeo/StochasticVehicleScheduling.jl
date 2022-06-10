@@ -27,7 +27,7 @@ struct ExperienceDataset{Dx, Dy, L} <: AbstractDataset
 end
 
 function ExperienceDataset(X, Y)
-    return ExperienceDataset(X, Y, Flux.DataLoader(X; batchsize=1))
+    return ExperienceDataset(X, Y, Flux.DataLoader((X, ); batchsize=1))
 end
 
 function loss_data(dataset::ExperienceDataset)
@@ -35,5 +35,5 @@ function loss_data(dataset::ExperienceDataset)
 end
 
 function build_loader(dataset::ExperienceDataset, batchsize)
-    return Flux.DataLoader((dataset.X); batchsize=batchsize)
+    return Flux.DataLoader((dataset.X, ); batchsize=batchsize)
 end

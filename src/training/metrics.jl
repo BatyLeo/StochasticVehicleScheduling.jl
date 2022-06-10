@@ -21,10 +21,6 @@ Loss(name="Loss") = Loss(name, Float64[])
 
 function (m::Loss)(trainer::Trainer; train, kwargs...)
     data = train ? trainer.data.train : trainer.data.test
-    @info typeof(loader(data))
-    for t in loader(data)
-        @info typeof(t) length(t)
-    end
     return mean(trainer.loss(t...) for t in loader(data))
 end
 
@@ -64,14 +60,14 @@ end
 
 ## ---
 
-struct CostGap <: AbstractScalarMetric
+struct AverageCostGap <: AbstractScalarMetric
     name::String
     history::Vector{Float64}
 end
 
-CostGap(name="Cost gap") = CostGap(name, Float64[])
+AverageCostGap(name="Average cost gap") = AverageCostGap(name, Float64[])
 
-function (m::CostGap)(trainer::Trainer; train, Y_pred, kwargs...)
+function (m::AverageCostGap)(trainer::Trainer; train, Y_pred, kwargs...)
     (; cost) = trainer
     data = train ? trainer.data.train : trainer.data.test
     train_cost = [cost(y; instance=x) for (x, y) in zip(data.X, Y_pred)]
@@ -83,10 +79,65 @@ function (m::CostGap)(trainer::Trainer; train, Y_pred, kwargs...)
     return cost_gap
 end
 
-function log_last_measure!(m::CostGap, logger::AbstractLogger; train=true, step_increment=0)
+function log_last_measure!(m::AverageCostGap, logger::AbstractLogger; train=true, step_increment=0)
     str = train ? "train" : "test"
     with_logger(logger) do
-        @info "$str" cost_gap=m.history[end] log_step_increment=step_increment
+        @info "$str" average_cost_gap=m.history[end] log_step_increment=step_increment
+    end
+end
+
+## ---
+
+struct MaxCostGap <: AbstractScalarMetric
+    name::String
+    history::Vector{Float64}
+end
+
+MaxCostGap(name="Max cost gap") = MaxCostGap(name, Float64[])
+
+function (m::MaxCostGap)(trainer::Trainer; train, Y_pred, kwargs...)
+    (; cost) = trainer
+    data = train ? trainer.data.train : trainer.data.test
+    train_cost = [cost(y; instance=x) for (x, y) in zip(data.X, Y_pred)]
+    train_cost_opt = [cost(y; instance=x) for (x, y) in zip(data.X, data.Y)]
+
+    cost_gap = maximum(
+        (c - c_opt) / abs(c_opt) for (c, c_opt) in zip(train_cost, train_cost_opt)
+    )
+    return cost_gap
+end
+
+function log_last_measure!(m::MaxCostGap, logger::AbstractLogger; train=true, step_increment=0)
+    str = train ? "train" : "test"
+    with_logger(logger) do
+        @info "$str" max_cost_gap=m.history[end] log_step_increment=step_increment
+    end
+end
+## ---
+
+struct AverageCost <: AbstractScalarMetric
+    name::String
+    history::Vector{Float64}
+end
+
+AverageCost(name="Average cost") = AverageCost(name, Float64[])
+
+function (m::AverageCost)(trainer::Trainer; train, Y_pred, kwargs...)
+    (; cost) = trainer
+    data = train ? trainer.data.train : trainer.data.test
+    train_cost = [cost(y; instance=x) for (x, y) in zip(data.X, Y_pred)]
+    train_cost_opt = [cost(y; instance=x) for (x, y) in zip(data.X, data.Y)]
+
+    cost_gap = mean(
+        c for (c, c_opt) in zip(train_cost, train_cost_opt)
+    )
+    return cost_gap
+end
+
+function log_last_measure!(m::AverageCost, logger::AbstractLogger; train=true, step_increment=0)
+    str = train ? "train" : "test"
+    with_logger(logger) do
+        @info "$str" average_cost=m.history[end] log_step_increment=step_increment
     end
 end
 
