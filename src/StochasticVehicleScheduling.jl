@@ -60,7 +60,7 @@ export column_generation, compute_solution_from_selected_columns
 export solve_scenarios
 
 # Dataset
-export generate_dataset, save_dataset, load_dataset
+export generate_dataset, save_dataset, load_dataset, normalize_data!
 
 # Visualization
 export plot_instance, plot_solution

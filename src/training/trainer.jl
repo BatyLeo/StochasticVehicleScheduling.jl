@@ -20,6 +20,7 @@ struct Trainer{D, P, L, C, M, O, LL}
     logger::LL
     log_every_n_epochs::Int
     save_every_n_epochs::Int
+    nb_epochs::Int
 end
 
 function Trainer(config_file)#; model_builder)
@@ -27,8 +28,12 @@ function Trainer(config_file)#; model_builder)
     logger = TBLogger(joinpath(config.train.log_dir, config.train.tag), min_level=Logging.Info)
     save_config(config, joinpath(logger.logdir, "config.yaml"))
 
+    # Build model
+    model = eval(Meta.parse(config.model.name))
+    pipeline, loss, cost, dataset = model(; config.model.args...)
+
     # Load data and create dataset
-    (; data_dir, train_file, test_file, dataset_type) = config.data
+    (; data_dir, train_file, test_file) = config.data
 
     train_dir = joinpath(data_dir, train_file)
     dataset_train = load(train_dir);
@@ -38,26 +43,31 @@ function Trainer(config_file)#; model_builder)
     dataset_test = load(test_dir);
     X_test, Y_test = dataset_test["X"], dataset_test["Y"]; # TODO: remove hardcoded stuff
 
-    dataset = eval(Meta.parse(dataset_type))
+    #dataset = eval(Meta.parse(dataset_type))
     data_train = dataset(X_train, Y_train)
     data_test = dataset(X_test, Y_test)
     loader = build_loader(data_train, config.train.batchsize)
     data = (loader=loader, train=data_train, test=data_test)
 
-    # Build model
-    model = eval(Meta.parse(config.model.name))
-    pipeline, loss, cost = model(; config.model.args...)
-
     # Metrics
-    metrics = [eval(Meta.parse(metric)) for metric in config.train.metrics]
-    train_metrics = Tuple(metric() for metric in metrics)
-    test_metrics = Tuple(metric() for metric in metrics)
+
+    metrics = [eval(Meta.parse(metric)) for metric in config.train.metrics.train_and_test]
+    train_metric_list = isnothing(config.train.metrics.train) ? [] : [eval(Meta.parse(metric)) for metric in config.train.metrics.train]
+    test_metric_list = isnothing(config.train.metrics.test) ? [] : [eval(Meta.parse(metric)) for metric in config.train.metrics.test]
+
+    train_metrics = Tuple(metric() for metric in cat(metrics, train_metric_list, dims=1))
+    test_metrics = Tuple(metric() for metric in cat(metrics, test_metric_list, dims=1))
 
     # Optimizer
     (; name, args) = config.train.optimizer
-    opt = eval(Meta.parse(name))(args...)
+    if isnothing(args)
+        opt = eval(Meta.parse(name))()
+    else
+        opt = eval(Meta.parse(name))(args...)
+    end
 
-    (; log_every_n_epochs, save_every_n_epochs) = config.train
+
+    (; log_every_n_epochs, save_every_n_epochs, nb_epochs) = config.train
 
     return Trainer(
         data,
@@ -69,6 +79,7 @@ function Trainer(config_file)#; model_builder)
         logger,
         log_every_n_epochs,
         save_every_n_epochs,
+        nb_epochs,
     )
 end
 
@@ -121,11 +132,12 @@ function my_custom_train!(loss, ps, data, opt)
     return nothing
 end
 
-function train_loop!(trainer::Trainer, nb_epochs::Integer; show_progress=true)
+function train_loop!(trainer::Trainer; show_progress=true)
+    (; nb_epochs, loss, pipeline, opt, data) = trainer
     p = Progress(nb_epochs; enabled=show_progress)
     compute_metrics!(trainer, 0)
     for n in 1:nb_epochs
-        my_custom_train!(trainer.loss, Flux.params(trainer.pipeline.encoder), trainer.data.loader, trainer.opt)
+        my_custom_train!(loss, Flux.params(pipeline.encoder), data.loader, opt)
         #Flux.train!(trainer.loss, Flux.params(trainer.pipeline.encoder), loader(trainer.data.train), trainer.opt)
         compute_metrics!(trainer, n)
         save_model(trainer, n)
@@ -145,7 +157,13 @@ function FenchelYoungGLM(; nb_features, ε, M, model_builder::String)
     pipeline_loss(X, Y) = mean(loss(encoder(x.features), y.value; instance=x) for (x, y) in zip(X, Y))
 
     cost(y; instance) = evaluate_solution(y, instance)
-    return pipeline, pipeline_loss, cost
+    return pipeline, pipeline_loss, cost, SupervisedDataset
+end
+
+# --
+
+function normalizing(x::Vector)
+    return x / LinearAlgebra.norm(x)
 end
 
 function PerturbedGLM(; nb_features, ε, M, model_builder::String)
@@ -160,5 +178,31 @@ function PerturbedGLM(; nb_features, ε, M, model_builder::String)
     loss = PerturbedCost(PerturbedNormal(maximizer; ε=ε, M=M), cost)
     pipeline_loss(X) = mean(loss(encoder(x.features); instance=x) for x in X)
 
-    return pipeline, pipeline_loss, cost
+    return pipeline, pipeline_loss, cost, ExperienceDataset
+end
+
+# --
+
+function build_θ(fg)
+    features = node_feature(fg)
+    return [features[e[1], e[2]] for (i, e) in edges(fg)]
+end
+
+function GNN_imitation(; nb_features, ε, M, model_builder::String)
+    encoder = Chain(
+        GCNConv(nb_features=>20),
+        GraphParallel(node_layer=Dense(20, nb_vertices)),
+        build_θ
+    )
+
+    maximizer(θ::AbstractVector; instance) = easy_problem(
+        θ; instance, model_builder=eval(Meta.parse(model_builder))
+    )
+    pipeline = Pipeline(encoder, maximizer)
+
+    loss = FenchelYoungLoss(PerturbedNormal(maximizer; ε, M))
+    pipeline_loss(X, Y) = mean(loss(encoder(x.features), y.value; instance=x) for (x, y) in zip(X, Y))
+
+    cost(y; instance) = evaluate_solution(y, instance)
+    return pipeline, pipeline_loss, cost, SupervisedDataset
 end

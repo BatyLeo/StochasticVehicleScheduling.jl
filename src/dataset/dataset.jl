@@ -26,6 +26,22 @@ function generate_dataset(
     jldsave(test_file, X=X_test, Y=Y_test)
 end
 
+function normalize_data!(X)
+    m = [mean(x.features, dims=2)[:, 1] for x in X]
+    μ = mean(m)
+    σ = std(m)
+
+    @info "info" μ σ
+
+    for x in X
+        for slice in (1:1, 3:size(x.features, 1))
+            for col in 1:size(x.features, 2)
+                @. x.features[slice, col] = @views (x.features[slice, col] - μ[slice]) / σ[slice]
+            end
+        end
+    end
+end
+
 # """
 #     generate_dataset(
 #         dataset_size::Int;

@@ -1,26 +1,30 @@
-data:
-  data_dir: data/data50
-  train_file: train.jld2
-  test_file: test.jld2
-  dataset_type: ExperienceDataset
-model:
-  name: PerturbedGLM
-  args:
-    nb_features: 20
-    ε: 0.1
-    M: 5
-    model_builder: grb_model
 train:
-  tag: experiment
-  log_dir: logs
-  nb_epochs: 100
-  batchsize: 2
-  log_every_n_epochs: 10
-  save_every_n_epochs: 50
-  optimizer:
-    name: ADAM
-    args:
-      η: 0.65
+  batchsize: 1
+  save_every_n_epochs: 100
   metrics:
-    - Loss
-    - CostGap
+    test: ~
+    train:
+      - "ModelWeights"
+    train_and_test:
+      - "Loss"
+      - "AverageCostGap"
+      - "MaxCostGap"
+      - "AveragePerturbedCostGap"
+  tag: "learning_by_experience"
+  optimizer:
+    name: "ADAM"
+    args: ~
+  nb_epochs: 300
+  log_dir: "logs"
+  log_every_n_epochs: 1
+model:
+  name: "PerturbedGLM"
+  args:
+    M: 5
+    nb_features: 20
+    ε: 1000
+    model_builder: "grb_model"
+data:
+  data_dir: "data/data50"
+  test_file: "test.jld2"
+  train_file: "train.jld2"

@@ -349,12 +349,12 @@ function compute_features(city::City)
 
     for (i, edge) in enumerate(edges(graph))
         # compute travel time
-        features[travel_time_index, i] = distance(city.tasks[edge.src].end_point, city.tasks[edge.dst].start_point)
+        features[travel_time_index, i] = distance(city.tasks[src(edge)].end_point, city.tasks[dst(edge)].start_point)
         # if edge connected to source node
-        features[connected_to_source_index, i] = edge.src == 1 ? city.vehicle_cost : 0.
+        features[connected_to_source_index, i] = src(edge) == 1 ? city.vehicle_cost : 0.
 
         # slack related features
-        slacks = compute_slacks(city, edge.src, edge.dst)
+        slacks = compute_slacks(city, src(edge), dst(edge))
         # compute deciles
         features[slack_deciles_indices, i] = quantile(slacks, [0.1 * i for i in 1:9])
         # compute cumulative distribution
