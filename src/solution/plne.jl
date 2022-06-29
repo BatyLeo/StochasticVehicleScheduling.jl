@@ -1,4 +1,4 @@
-function solve_scenarios(instance::Instance)
+function solve_scenarios(instance::Instance; model_builder=cbc_model)
     (; graph, slacks, delays, city) = instance
     (; delay_cost, vehicle_cost) = city
     nb_nodes = nv(graph)
@@ -13,8 +13,7 @@ function solve_scenarios(instance::Instance)
     Ω = 1:nb_scenarios
 
     # Model definition
-    model = Model(Cbc.Optimizer)
-    set_optimizer_attribute(model, "logLevel", 0)
+    model = model_builder()
 
     # Variables and objective function
     @variable(model, y[u in nodes, v in nodes; has_edge(graph, u, v)], Bin)

@@ -191,14 +191,14 @@ function (m::AveragePerturbedCostGap)(trainer::Trainer; train, kwargs...)
     (; cost) = trainer
     data = train ? trainer.data.train : trainer.data.test
 
-    perturbed = PerturbedNormal(trainer.pipeline.maximizer; ε=1000, M=5)
+    perturbed = PerturbedAdditive(trainer.pipeline.maximizer; ε=1000, nb_samples=5)
 
     thetas = [trainer.pipeline.encoder(x.features) for x in data.X]
     train_cost = zeros(length(thetas))
     for (i, (θ, x)) in enumerate(zip(thetas, data.X))
         mini = Inf
         for m in 1:10
-            pert = InferOpt.sample_perturbation(perturbed, θ)
+            pert = InferOpt.sample_perturbations(perturbed, θ)
             mini = min(cost(trainer.pipeline.maximizer(pert; instance=x), instance=x), mini)
         end
         train_cost[i] = mini

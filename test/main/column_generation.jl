@@ -6,23 +6,6 @@ using JLD2
 using Random
 using Graphs
 
-function short(solution::Solution)
-    res = Vector{Int}[]
-    n, m = size(solution.path_value)
-    for row in 1:n
-        hello = Int[]
-        for col in 1:m
-            if solution.path_value[row, col]
-                push!(hello, col+1)
-            end
-        end
-        if length(hello) > 0
-            push!(res, hello)
-        end
-    end
-    return "$(length(res)), $res"
-end
-
 # dataset_path = "data/data.jld2"
 # data = load(dataset_path)["data"];
 
@@ -48,8 +31,10 @@ end
 
 Random.seed!(1)
 instance = Instance(create_random_city(
-    nb_tasks=10, nb_scenarios=10
+    nb_tasks=50, nb_scenarios=1
 ));
+
+@time solve_scenarios(instance; model_builder=grb_model)
 
 # fig = plot_instance(instance);
 # display(fig)
@@ -60,6 +45,8 @@ instance = Instance(create_random_city(
 # display(fig2)
 
 #instance.delays
+
+@time column_generation(instance)
 
 λ, c_low, paths, dual1, dual2 = column_generation(instance);
 #@info "Col gen" obj
@@ -73,17 +60,17 @@ obj2, y = compute_solution_from_selected_columns(instance, paths; bin=false);
 #@info "Final" obj2
 
 c_upp, y = compute_solution_from_selected_columns(instance, paths);
+paths[[y[p] for p in paths] .== 1.0]
+
 #@info "Final" obj2
 
 #sum(y)
 
-#paths[[y[p] for p in paths] .== 1.0]
-
-sol = heuristic_solution(instance; nb_it=10000)
-heuristic_val = evaluate_solution(sol, instance)
+sol = heuristic_solution(instance; nb_it=10000);
+heuristic_val = evaluate_solution(sol, instance);
 #short(sol)
 
-exact_val, paths = solve_scenarios(instance)
+exact_val, paths = solve_scenarios(instance);
 
 c, _ = compute_solution_from_selected_columns(instance, paths);
 

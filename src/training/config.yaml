@@ -9,8 +9,8 @@ train:
       - "Loss"
       - "AverageCostGap"
       - "MaxCostGap"
-      - "AveragePerturbedCostGap"
-  tag: "learning_by_experience"
+      #- "AveragePerturbedCostGap"
+  tag: "test_new_inferopt_normalized"
   optimizer:
     name: "ADAM"
     args: ~
@@ -25,6 +25,6 @@ model:
     ε: 1000
     model_builder: "grb_model"
 data:
-  data_dir: "data/data50"
+  data_dir: "data/data50_normalized"
   test_file: "test.jld2"
   train_file: "train.jld2"

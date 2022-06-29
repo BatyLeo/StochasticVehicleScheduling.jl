@@ -1,3 +1,20 @@
+function compute_μ_σ(X)
+    m = [mean(x.features, dims=2)[:, 1] for x in X] # mean per sample and feature
+    μ = mean(m) # mean per feature
+    σ = std(m)
+    return μ, σ
+end
+
+function normalize_data!(X, μ, σ)
+    for x in X
+        # for slice in (1:1, 3:size(x.features, 1))
+        for col in 1:size(x.features, 2)
+            @. x.features[:, col] = @views (x.features[:, col] - μ) / σ
+        end
+        # end
+    end
+end
+
 # TODO : dataset config
 function generate_samples(
     nb_samples::Integer;
@@ -19,27 +36,17 @@ function generate_dataset(
         mkdir(dataset_folder)
     end
     X_train, Y_train = generate_samples(nb_train_samples; city_kwargs)
+    X_test, Y_test = generate_samples(nb_test_samples; city_kwargs)
+
+    # normalization
+    μ, σ = compute_μ_σ(cat(X_train, X_test, dims=1))
+    normalize_data!(X_train, μ, σ)
+    normalize_data!(X_test, μ, σ)
+
     train_file = joinpath(dataset_folder, "train.jld2")
     jldsave(train_file, X=X_train, Y=Y_train)
-    X_test, Y_test = generate_samples(nb_test_samples; city_kwargs)
     test_file = joinpath(dataset_folder, "test.jld2")
     jldsave(test_file, X=X_test, Y=Y_test)
-end
-
-function normalize_data!(X)
-    m = [mean(x.features, dims=2)[:, 1] for x in X]
-    μ = mean(m)
-    σ = std(m)
-
-    @info "info" μ σ
-
-    for x in X
-        for slice in (1:1, 3:size(x.features, 1))
-            for col in 1:size(x.features, 2)
-                @. x.features[slice, col] = @views (x.features[slice, col] - μ[slice]) / σ[slice]
-            end
-        end
-    end
 end
 
 # """

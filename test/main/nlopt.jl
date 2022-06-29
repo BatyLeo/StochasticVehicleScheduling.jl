@@ -11,7 +11,7 @@ config = "src/training/config.yaml"
 trainer = Trainer(config);
 
 cost(y; instance) = evaluate_solution(y, instance)
-loss = PerturbedCost(PerturbedNormal(trainer.pipeline.maximizer; ε=1000, M=5), cost)
+loss = PerturbedComposition(PerturbedAdditive(trainer.pipeline.maximizer; ε=1000, nb_samples=5, seed=0), cost)
 
 (; X, Y) = trainer.data.train;
 

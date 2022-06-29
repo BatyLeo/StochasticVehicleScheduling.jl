@@ -47,9 +47,6 @@ function column_generation(instance::Instance)
         )
         λ_sum = sum(λ_val[v] for v in job_indices if v in p_star)
         path_cost = delay_cost * c_star + λ_sum + vehicle_cost
-        a = delay_cost * delay_sum(p_star, slacks, delays) + vehicle_cost - sum(λ_val[v] for v in job_indices if v in p_star)
-        #@info "Hello" delay_sum(p_star, slacks, delays) c_star
-        #@info "adding" c_star p_star path_cost a path_cost - λ_sum
         if path_cost - λ_sum > -1e-10
             break
         end
@@ -60,7 +57,29 @@ function column_generation(instance::Instance)
         ))
     end
 
-    return value.(λ), objective_value(model), cat(initial_paths, new_paths; dims=1), dual.(con), dual.(cons)
+    c_low = objective_value(model)
+    paths = cat(initial_paths, new_paths; dims=1)
+    c_upp, y = compute_solution_from_selected_columns(instance, paths)
+    @info paths[[y[p] for p in paths] .== 1.0]
+
+    if c_upp ≈ c_low
+        return value.(λ), objective_value(model), cat(initial_paths, new_paths; dims=1), dual.(con), dual.(cons)
+    end
+    # else
+    threshold = (c_upp - c_low - vehicle_cost) / delay_cost
+    @info "There is a threshold" c_upp c_low threshold
+    λ_val = value.(λ)
+    additional_paths, costs = stochastic_routing_shortest_path_with_threshold(
+        graph, slacks, delays, λ_val ./ delay_cost; threshold
+    )
+    # (; c_star, p_star) = stochastic_routing_shortest_path(
+    #     graph, slacks, delays, λ_val ./ delay_cost
+    # )
+    # @info "" c_star p_star delay_cost * c_star + vehicle_cost
+
+    # @info "Additional paths" additional_paths sort(costs)
+
+    return value.(λ), objective_value(model), unique(cat(initial_paths, new_paths, additional_paths; dims=1)), dual.(con), dual.(cons)
 end
 
 function compute_solution_from_selected_columns(instance::Instance, paths; bin=true)
