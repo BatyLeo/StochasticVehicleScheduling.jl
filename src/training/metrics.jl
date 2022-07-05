@@ -1,3 +1,5 @@
+# This file implements Metric type, which allow automatized metric computation
+
 abstract type AbstractMetric end
 
 function compute_value!(m::AbstractMetric, t::Trainer; kwargs...)
@@ -12,51 +14,32 @@ function log_last_measure!(m::AbstractMetric, logger=nothing; train=true, step_i
 
 ## ---
 
-struct Loss <: AbstractMetric
+mutable struct Loss <: AbstractMetric
     name::String
     history::Vector{Float64}
+    best_value::Float64
 end
 
-Loss(name="Loss") = Loss(name, Float64[])
+Loss(name="Loss") = Loss(name, Float64[], Inf)
 
-function (m::Loss)(trainer::Trainer; train, kwargs...)
-    data = train ? trainer.data.train : trainer.data.test
-    return mean(trainer.loss(t...) for t in loader(data))
+function (m::Loss)(trainer::Trainer; train, epoch, kwargs...)
+    data = train ? trainer.data.train : trainer.data.validation
+    value = mean(trainer.loss(t...) for t in loader(data))
+
+    # Save model if we beat best loss (store best loss in variable ??)
+    if !train && value < m.best_value
+        m.best_value = value
+        save_model(trainer, epoch; best=true)
+    end
+    return value
 end
 
 function log_last_measure!(m::Loss, logger::AbstractLogger; train=true, step_increment=0)
-    str = train ? "train" : "test"
+    str = train ? "train" : "validation"
     with_logger(logger) do
         @info "$str" loss=m.history[end] log_step_increment=step_increment
     end
 end
-
-## ---
-
-# struct HammingDistance <: AbstractMetric
-#     name::String
-#     history::Vector{Float64}
-# end
-
-# HammingDistance(name="Hamming distance") = HammingDistance(name, Float64[])
-
-# function (m::HammingDistance)(trainer::InferOptTrainer, data; Y_pred, kwargs...)
-#     dist = mean(
-#         hamming_distance(y, y_pred) for (y, y_pred) in zip(data.Y, Y_pred)
-#     )
-#     return dist
-# end
-
-# function test_perf(metric::HammingDistance)
-#     @test metric.history[end] < metric.history[1] / 2
-# end
-
-# function log_last_measure!(m::HammingDistance, logger::AbstractLogger; train=true, step_increment=0)
-#     str = train ? "train" : "test"
-#     with_logger(logger) do
-#         @info "$str" hamming=m.history[end] log_step_increment=step_increment
-#     end
-# end
 
 ## ---
 
@@ -69,7 +52,7 @@ AverageCostGap(name="Average cost gap") = AverageCostGap(name, Float64[])
 
 function (m::AverageCostGap)(trainer::Trainer; train, Y_pred, kwargs...)
     (; cost) = trainer
-    data = train ? trainer.data.train : trainer.data.test
+    data = train ? trainer.data.train : trainer.data.validation
     train_cost = [cost(y; instance=x) for (x, y) in zip(data.X, Y_pred)]
     train_cost_opt = [cost(y; instance=x) for (x, y) in zip(data.X, data.Y)]
 
@@ -80,7 +63,7 @@ function (m::AverageCostGap)(trainer::Trainer; train, Y_pred, kwargs...)
 end
 
 function log_last_measure!(m::AverageCostGap, logger::AbstractLogger; train=true, step_increment=0)
-    str = train ? "train" : "test"
+    str = train ? "train" : "validation"
     with_logger(logger) do
         @info "$str" average_cost_gap=m.history[end] log_step_increment=step_increment
     end
@@ -97,7 +80,7 @@ MaxCostGap(name="Max cost gap") = MaxCostGap(name, Float64[])
 
 function (m::MaxCostGap)(trainer::Trainer; train, Y_pred, kwargs...)
     (; cost) = trainer
-    data = train ? trainer.data.train : trainer.data.test
+    data = train ? trainer.data.train : trainer.data.validation
     train_cost = [cost(y; instance=x) for (x, y) in zip(data.X, Y_pred)]
     train_cost_opt = [cost(y; instance=x) for (x, y) in zip(data.X, data.Y)]
 
@@ -108,7 +91,7 @@ function (m::MaxCostGap)(trainer::Trainer; train, Y_pred, kwargs...)
 end
 
 function log_last_measure!(m::MaxCostGap, logger::AbstractLogger; train=true, step_increment=0)
-    str = train ? "train" : "test"
+    str = train ? "train" : "validation"
     with_logger(logger) do
         @info "$str" max_cost_gap=m.history[end] log_step_increment=step_increment
     end
@@ -124,7 +107,7 @@ AverageCost(name="Average cost") = AverageCost(name, Float64[])
 
 function (m::AverageCost)(trainer::Trainer; train, Y_pred, kwargs...)
     (; cost) = trainer
-    data = train ? trainer.data.train : trainer.data.test
+    data = train ? trainer.data.train : trainer.data.validation
     train_cost = [cost(y; instance=x) for (x, y) in zip(data.X, Y_pred)]
     train_cost_opt = [cost(y; instance=x) for (x, y) in zip(data.X, data.Y)]
 
@@ -135,7 +118,7 @@ function (m::AverageCost)(trainer::Trainer; train, Y_pred, kwargs...)
 end
 
 function log_last_measure!(m::AverageCost, logger::AbstractLogger; train=true, step_increment=0)
-    str = train ? "train" : "test"
+    str = train ? "train" : "validation"
     with_logger(logger) do
         @info "$str" average_cost=m.history[end] log_step_increment=step_increment
     end
@@ -189,7 +172,7 @@ AveragePerturbedCostGap(name="Average cost gap") = AveragePerturbedCostGap(name,
 
 function (m::AveragePerturbedCostGap)(trainer::Trainer; train, kwargs...)
     (; cost) = trainer
-    data = train ? trainer.data.train : trainer.data.test
+    data = train ? trainer.data.train : trainer.data.validation
 
     perturbed = PerturbedAdditive(trainer.pipeline.maximizer; ε=1000, nb_samples=5)
 
@@ -197,9 +180,9 @@ function (m::AveragePerturbedCostGap)(trainer::Trainer; train, kwargs...)
     train_cost = zeros(length(thetas))
     for (i, (θ, x)) in enumerate(zip(thetas, data.X))
         mini = Inf
-        for m in 1:10
-            pert = InferOpt.sample_perturbations(perturbed, θ)
-            mini = min(cost(trainer.pipeline.maximizer(pert; instance=x), instance=x), mini)
+        Zs = InferOpt.sample_perturbations(perturbed, θ)
+        for z in Zs
+            mini = min(cost(trainer.pipeline.maximizer(perturbed(θ, z; instance=x); instance=x), instance=x), mini)
         end
         train_cost[i] = mini
     end
@@ -214,79 +197,8 @@ function (m::AveragePerturbedCostGap)(trainer::Trainer; train, kwargs...)
 end
 
 function log_last_measure!(m::AveragePerturbedCostGap, logger::AbstractLogger; train=true, step_increment=0)
-    str = train ? "train" : "test"
+    str = train ? "train" : "validation"
     with_logger(logger) do
         @info "$str" average_perturbed_cost_gap=m.history[end] log_step_increment=step_increment
     end
 end
-
-# struct ParameterError <: AbstractMetric
-#     name::String
-#     history::Vector{Float64}
-# end
-
-# ParameterError(name="Parameter error") = ParameterError(name, Float64[])
-
-# function (m::ParameterError)(trainer::InferOptTrainer, data; kwargs...)
-#     (; true_encoder, encoder) = trainer.extra_info
-#     w_true = first(true_encoder).weight
-#     w_learned = first(encoder).weight
-#     parameter_error = normalized_mape(w_true, w_learned)
-#     return parameter_error
-# end
-
-# function test_perf(metric::ParameterError)
-#     @test metric.history[end] < metric.history[1] / 2
-# end
-
-# function log_last_measure!(m::ParameterError, logger::AbstractLogger; train=true, step_increment=0)
-#     str = train ? "train" : "test"
-#     with_logger(logger) do
-#         @info "$str" error=m.history[end] log_step_increment=step_increment
-#     end
-# end
-
-# ## ---
-
-# struct MeanSquaredError <: AbstractMetric
-#     name::String
-#     history::Vector{Float64}
-# end
-
-# MeanSquaredError(name="Mean squared error") = MeanSquaredError(name, Float64[])
-
-# function (m::MeanSquaredError)(trainer::InferOptTrainer, data; Y_pred, kwargs...)
-#     train_error = mean(
-#         sum((y - y_pred) .^ 2) for (y, y_pred) in zip(data.Y, Y_pred)
-#     )
-#     return train_error
-# end
-
-# function test_perf(metric::MeanSquaredError)
-#     @test metric.history[end] < metric.history[1] / 2
-# end
-
-# function log_last_measure!(m::MeanSquaredError, logger::AbstractLogger; train=true, step_increment=0)
-#     str = train ? "train" : "test"
-#     with_logger(logger) do
-#         @info "$str" mse=m.history[end] log_step_increment=step_increment
-#     end
-# end
-
-# ## ----
-
-# struct ScalarMetric{R <: Real, F} <: AbstractMetric
-#     name::String
-#     history::Vector{R}
-#     f::F
-# end
-
-# ScalarMetric(;name::String, f) = ScalarMetric(name, [], f)
-
-# function (m::ScalarMetric)(t::InferOptTrainer)
-#     return m.f(t)
-# end
-
-# function name(m::AbstractMetric)
-#     return m.name
-# end

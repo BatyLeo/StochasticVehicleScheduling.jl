@@ -1,3 +1,8 @@
+"""
+    Pipeline
+
+InferOpt pipeline container an encoder and a maximizer
+"""
 struct Pipeline{E,M}
     encoder::E
     maximizer::M
@@ -10,6 +15,11 @@ end
 
 # ----------
 
+"""
+    Trainer
+
+Main structure used for training an InferOpt model.
+"""
 struct Trainer{D,P,L,C,M,O,LL}
     data::D
     pipeline::P
@@ -33,30 +43,28 @@ function Trainer(config_file)#; model_builder)
     pipeline, loss, cost, dataset = model(; config.model.args...)
 
     # Load data and create dataset
-    (; data_dir, train_file, test_file) = config.data
+    (; data_dir, train_file, validation_file) = config.data
 
     train_dir = joinpath(data_dir, train_file)
     dataset_train = load(train_dir)
     X_train, Y_train = dataset_train["X"], dataset_train["Y"] # TODO: remove hardcoded stuff
 
-    test_dir = joinpath(data_dir, test_file)
-    dataset_test = load(test_dir)
-    X_test, Y_test = dataset_test["X"], dataset_test["Y"] # TODO: remove hardcoded stuff
+    val_dir = joinpath(data_dir, validation_file)
+    dataset_val = load(val_dir)
+    X_val, Y_val = dataset_val["X"], dataset_val["Y"] # TODO: remove hardcoded stuff
 
-    #dataset = eval(Meta.parse(dataset_type))
     data_train = dataset(X_train, Y_train)
-    data_test = dataset(X_test, Y_test)
+    data_val = dataset(X_val, Y_val)
     loader = build_loader(data_train, config.train.batchsize)
-    data = (loader=loader, train=data_train, test=data_test)
+    data = (loader=loader, train=data_train, validation=data_val)
 
     # Metrics
-
-    metrics = [eval(Meta.parse(metric)) for metric in config.train.metrics.train_and_test]
+    metrics = [eval(Meta.parse(metric)) for metric in config.train.metrics.train_and_validation]
     train_metric_list = isnothing(config.train.metrics.train) ? [] : [eval(Meta.parse(metric)) for metric in config.train.metrics.train]
-    test_metric_list = isnothing(config.train.metrics.test) ? [] : [eval(Meta.parse(metric)) for metric in config.train.metrics.test]
+    val_metric_list = isnothing(config.train.metrics.validation) ? [] : [eval(Meta.parse(metric)) for metric in config.train.metrics.validation]
 
     train_metrics = Tuple(metric() for metric in cat(metrics, train_metric_list, dims=1))
-    test_metrics = Tuple(metric() for metric in cat(metrics, test_metric_list, dims=1))
+    validation_metrics = Tuple(metric() for metric in cat(metrics, val_metric_list, dims=1))
 
     # Optimizer
     (; name, args) = config.train.optimizer
@@ -74,7 +82,7 @@ function Trainer(config_file)#; model_builder)
         pipeline,
         loss,
         cost,
-        (train=train_metrics, test=test_metrics),
+        (train=train_metrics, validation=validation_metrics),
         opt,
         logger,
         log_every_n_epochs,
@@ -83,31 +91,38 @@ function Trainer(config_file)#; model_builder)
     )
 end
 
-function compute_metrics!(trainer::Trainer, n::Integer)
-    if n % trainer.log_every_n_epochs != 0
+function compute_metrics!(trainer::Trainer, epoch::Integer)
+    if epoch % trainer.log_every_n_epochs != 0
         return nothing
     end
+
     # else
     Y_train_pred = [trainer.pipeline(x) for x in trainer.data.train.X]
     for (idx, metric) in enumerate(trainer.metrics.train)
-        compute_value!(metric, trainer; train=true, Y_pred=Y_train_pred)
-        log_last_measure!(metric, trainer.logger; train=true, step_increment=(idx == 1 ? n - trainer.logger.global_step : 0))
+        compute_value!(metric, trainer; train=true, Y_pred=Y_train_pred, epoch=epoch)
+        log_last_measure!(metric, trainer.logger; train=true, step_increment=(idx == 1 ? epoch - trainer.logger.global_step : 0))
     end
 
-    Y_test_pred = [trainer.pipeline(x) for x in trainer.data.test.X]
-    for metric in trainer.metrics.test
-        compute_value!(metric, trainer; train=false, Y_pred=Y_test_pred)
+    Y_val_pred = [trainer.pipeline(x) for x in trainer.data.validation.X]
+    for metric in trainer.metrics.validation
+        compute_value!(metric, trainer; train=false, Y_pred=Y_val_pred, epoch=epoch)
         log_last_measure!(metric, trainer.logger; train=false, step_increment=0)
     end
     return nothing
 end
 
-function save_model(trainer::Trainer, n::Integer)
-    if n % trainer.save_every_n_epochs != 0
+function save_model(trainer::Trainer, epoch::Integer; best=false)
+    if best
+        jldsave("$(trainer.logger.logdir)/best.jld2", data=trainer.pipeline.encoder, epoch=epoch)
+        return
+    end
+
+    # else
+    if epoch % trainer.save_every_n_epochs != 0
         return nothing
     end
     # else
-    jldsave("$(trainer.logger.logdir)/model_$n.jld2", data=trainer.pipeline.encoder)
+    jldsave("$(trainer.logger.logdir)/model_$epoch.jld2", data=trainer.pipeline.encoder)
 end
 
 function my_custom_train!(loss, ps, data, opt)

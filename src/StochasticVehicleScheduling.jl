@@ -48,7 +48,7 @@ export create_random_city
 export Instance, Solution
 export is_admissible
 
-export evaluate_solution
+export evaluate_solution, evaluate_solution2
 export Solution, solution_from_JuMP_array, basic_solution
 
 # Solvers

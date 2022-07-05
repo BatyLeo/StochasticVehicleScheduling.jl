@@ -1,3 +1,5 @@
+# This file implements Dataset types that allow to use Flux loader and custom batchsize values
+
 abstract type AbstractDataset end
 
 loader(d::AbstractDataset) = d.loader

@@ -29,22 +29,38 @@ end
 function generate_dataset(
     dataset_folder::String,
     nb_train_samples::Integer,
+    nb_val_samples::Integer,
     nb_test_samples::Integer;
     city_kwargs
 )
     if !isdir(dataset_folder)
         mkdir(dataset_folder)
     end
-    X_train, Y_train = generate_samples(nb_train_samples; city_kwargs)
-    X_test, Y_test = generate_samples(nb_test_samples; city_kwargs)
 
-    # normalization
-    μ, σ = compute_μ_σ(cat(X_train, X_test, dims=1))
-    normalize_data!(X_train, μ, σ)
-    normalize_data!(X_test, μ, σ)
+    nb_total_samples = nb_train_samples + nb_val_samples + nb_test_samples
+    X, Y = generate_samples(nb_total_samples; city_kwargs)
+    μ, σ = compute_μ_σ(X)
+    normalize_data!(X, μ, σ)
+
+    train_slice = 1:nb_train_samples
+    val_slice = nb_train_samples+1:nb_train_samples+nb_val_samples
+    test_slice = nb_train_samples+nb_val_samples+1:nb_total_samples
+    X_train, Y_train = X[train_slice], Y[train_slice]
+    X_val, Y_val = X[val_slice], Y[val_slice]
+    X_test, Y_test = X[test_slice], Y[test_slice]
+
+    # X_train, Y_train = generate_samples(nb_train_samples; city_kwargs)
+    # X_test, Y_test = generate_samples(nb_test_samples; city_kwargs)
+
+    # # normalization
+    # μ, σ = compute_μ_σ(cat(X_train, X_test, dims=1))
+    # normalize_data!(X_train, μ, σ)
+    # normalize_data!(X_test, μ, σ)
 
     train_file = joinpath(dataset_folder, "train.jld2")
     jldsave(train_file, X=X_train, Y=Y_train)
+    validation_file = joinpath(dataset_folder, "validation.jld2")
+    jldsave(validation_file, X=X_val, Y=Y_val)
     test_file = joinpath(dataset_folder, "test.jld2")
     jldsave(test_file, X=X_test, Y=Y_test)
 end

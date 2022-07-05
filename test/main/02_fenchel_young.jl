@@ -4,7 +4,7 @@ using StochasticVehicleScheduling.Training
 using UnicodePlots
 
 Random.seed!(67);
-config_file = "src/training/config.yaml"
+config_file = "test/main/configs/imitation.yaml"
 trainer = Trainer(config_file);
 train_loop!(trainer)
 
@@ -16,7 +16,7 @@ using TensorBoardLogger, ValueHistories, GLMakie
 
 # r = TBReader("logs/learn_by_imitation")
 # r = TBReader("logs/learning_by_experience")
-r = TBReader("logs/test_new_inferopt_normalized_5")
+r = TBReader("logs/test_new_inferopt_normalized_16")
 
 hist = MVHistory()
 
@@ -42,7 +42,7 @@ for (tag, value) in tags
     #println(lineplot(x, y; title=tag))
     #lines(x, y)
     fig = Figure()
-    if occursin("cost_gap", tag)
+    if true  #occursin("cost_gap", tag)
         ax = Axis(fig[1, 1], yscale=log10)
         @info "y" y
         for i in eachindex(y)
@@ -60,4 +60,30 @@ for (tag, value) in tags
     slice = 1:length(x)
     GLMakie.lines!(ax, x[slice], y[slice])
     save("figures/normalized/$(replace(tag, "/"=>"_")).png", fig)
+end
+
+
+tags = Dict(
+    "loss" => "Train loss",
+    "max_cost_gap" => "Train max cost gap",
+    "average_cost_gap" => "Train average cost gap",
+)
+
+for (tag, value) in tags
+    train_tag = "train/$tag"
+    test_tag = "test/$tag"
+    xtrain = hist[train_tag].iterations
+    ytrain = hist[train_tag].values
+    xtest = hist[test_tag].iterations
+    ytest = hist[test_tag].values
+
+    fig = Figure()
+    ax = Axis(fig[1, 1], yscale=log10)
+    ax.xlabel = "epochs"
+
+    ax.title = value
+    ltrain =GLMakie.lines!(ax, xtrain, ytrain)
+    ltest = GLMakie.lines!(ax, xtest, ytest)
+    Legend(fig[1, 2], [ltrain, ltest], ["train", "test"])
+    save("figures/normalized/$(replace(tag, "/"=>"_")).pdf", fig)
 end

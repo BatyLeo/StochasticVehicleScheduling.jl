@@ -1,0 +1,30 @@
+train:
+  log_dir: "logs"
+  tag: "test_new_inferopt_normalized"
+  batchsize: 1
+  metrics:
+    validation: ~
+    train:
+      - "ModelWeights"
+    train_and_validation:
+      - "Loss"
+      - "AverageCostGap"
+      - "MaxCostGap"
+      - "AveragePerturbedCostGap"
+  optimizer:
+    name: "ADAM"
+    args: ~
+  nb_epochs: 20
+  save_every_n_epochs: 20
+  log_every_n_epochs: 1
+model:
+  name: "FenchelYoungGLM"
+  args:
+    M: 5
+    nb_features: 20
+    ε: 0.1
+    model_builder: "grb_model"
+data:
+  data_dir: "data/25tasks10scenarios"
+  validation_file: "validation.jld2"
+  train_file: "train.jld2"

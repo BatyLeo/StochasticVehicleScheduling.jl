@@ -17,7 +17,6 @@ include("config.jl")
 include("dataset.jl")
 include("trainer.jl")
 include("metrics.jl")
-include("error.jl")
 include("perf.jl")
 
 dropfirstdim(z::AbstractArray) = dropdims(z; dims=1)
