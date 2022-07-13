@@ -2,12 +2,30 @@ using Random
 using StochasticVehicleScheduling
 
 Random.seed!(67)
-dataset_folder = "data/100tasks10scenarios"
-nb_tasks = 100
-nb_scenarios = 10
+nb_tasks = 200
+nb_scenarios = 50
+dataset_folder = "data/$(nb_tasks)tasks$(nb_scenarios)scenarios_uncentered"
 city_kwargs = (; nb_tasks, nb_scenarios)
 
-generate_dataset(dataset_folder, 50, 50, 50; city_kwargs);
+generate_dataset(dataset_folder, 50, 50, 50; labeled=true, heuristic=true, city_kwargs);
+
+# ---
+
+using JLD2
+
+datasets = ["25tasks10scenarios_exact_uncentered", "50tasks50scenarios_uncentered", "100tasks50scenarios_uncentered"];
+
+for setting in ["train", "validation", "test"]
+    X = Instance[];
+    Y = Solution[];
+    for dataset in datasets
+        data = load(joinpath("data", dataset, "$setting.jld2"))
+        X = cat(X, data["X"][1:15], dims=1)
+        Y = cat(Y, data["Y"][1:15], dims=1)
+    end
+    slice = shuffle(1:length(X))
+    jldsave(joinpath("data", "mixed_uncentered", "$setting.jld2"), X=X[slice], Y=Y[slice])
+end
 
 # ---
 
@@ -16,7 +34,7 @@ using Graphs
 using InferOpt
 using StochasticVehicleScheduling.Training
 
-data = load("data/data50_normalized/train.jld2");
+data = load("data/1000tasks10scenarios/test.jld2");
 X = data["X"];
 
 μ, σ = compute_μ_σ(X)

@@ -65,23 +65,15 @@ function solve_scenarios(instance::Instance; model_builder=cbc_model)
     optimize!(model)
     solution = value.(y)
 
-    paths = Vector{Int}[]
-    for i in job_indices
-        if solution[1, i] ≈ 1
-            new_path = [1, i]
-            index = i
-            while index < nb_nodes
-                for j in outneighbors(graph, index)
-                    if solution[index, j] ≈ 1
-                        push!(new_path, j)
-                        index = j
-                        break
-                    end
-                end
-            end
-            push!(paths, new_path)
-        end
-    end
 
-    return objective_value(model), paths
+    # sol = falses(ne(graph))
+    # for (i, edge) in enumerate(edges(graph))
+    #     if isapprox(value(y[src(edge), dst(edge)]), 1; tol=1e-4)
+    #         sol[i] = true
+    #     end
+    # end
+
+    sol = solution_from_JuMP_array(solution, graph)
+
+    return objective_value(model), sol
 end

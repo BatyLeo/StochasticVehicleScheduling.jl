@@ -262,15 +262,9 @@ function create_VSP_graph(city::City)
     # Initialize directed graph
     nb_vertices = city.nb_tasks + 2
     graph = SimpleDiGraph(nb_vertices)
-    # graph = MetaDiGraph(SimpleDiGraph(nb_vertices))
     starting_task = 1
     end_task = nb_vertices
     job_tasks = 2:(city.nb_tasks+1)
-
-    # Define tasks
-    # for vertex in 1:nb_vertices
-    #     set_prop!(graph, vertex, :task, city.tasks[vertex])
-    # end
 
     travel_times = [
         distance(task1.end_point, task2.start_point) for task1 in city.tasks,
@@ -281,26 +275,16 @@ function create_VSP_graph(city::City)
     for iorigin in job_tasks
         # link every task to base
         add_edge!(graph, starting_task, iorigin)
-        # set_prop!(
-        #     graph,
-        #     starting_task,
-        #     iorigin,
-        #     :travel_time,
-        #     travel_times[starting_task, iorigin],
-        # )
-
         add_edge!(graph, iorigin, end_task)
-        #set_prop!(graph, iorigin, end_task, :travel_time, travel_times[iorigin, end_task])
 
         for idestination in (iorigin+1):(city.nb_tasks+1)
             travel_time = travel_times[iorigin, idestination]
-            origin_end_time = city.tasks[iorigin].end_time #get_prop(graph, iorigin, :task).end_time
+            origin_end_time = city.tasks[iorigin].end_time
             destination_begin_time = city.tasks[idestination].start_time # get_prop(graph, idestination, :task).start_time
 
             # there is an edge only if we can reach destination from origin before start of task
             if origin_end_time + travel_time <= destination_begin_time
                 add_edge!(graph, iorigin, idestination)
-                #set_prop!(graph, iorigin, idestination, :travel_time, travel_time)
             end
         end
     end
@@ -362,30 +346,6 @@ function compute_features(city::City)
     end
     return features
 end
-
-# function evaluate_task(
-#     i_task::Integer,
-#     city::City,
-#     old_task_index::Integer,
-#     old_delay::Real,
-#     # current_time::Real,
-#     # current_delay::Real,
-#     scenario::Int,
-# )
-#     task = city.tasks[i_task]
-
-#     perturbed_travel_time = get_perturbed_travel_time(city, old_task_index, i_task, scenario)
-#     perturbed_start_time = task.scenario_start_time[scenario]
-#     delay = task.scenario_end_time[scenario] - task.end_time
-#     slack = - city.tasks[old_task_index].end_time - perturbed_travel_time + perturbed_start_time
-#     perturbation = max(old_delay - slack, 0)
-
-#     #perturbation = max(current_time + perturbed_travel_time - perturbed_start_time, 0)
-
-#     #new_current_delay = current_delay + perturbation
-#     #new_current_time = task.scenario_end_time[scenario] + perturbation
-#     return delay + perturbation #new_current_time, new_current_delay
-# end
 
 """
     compute_slacks(city)

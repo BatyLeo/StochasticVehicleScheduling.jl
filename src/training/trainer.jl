@@ -33,10 +33,14 @@ struct Trainer{D,P,L,C,M,O,LL}
     nb_epochs::Int
 end
 
-function Trainer(config_file)#; model_builder)
+function Trainer(config_file; create_logger=true)#; model_builder)
     config = read_config(config_file)
-    logger = TBLogger(joinpath(config.train.log_dir, config.train.tag), min_level=Logging.Info)
-    save_config(config, joinpath(logger.logdir, "config.yaml"))
+    if create_logger
+        logger = TBLogger(joinpath(config.train.log_dir, config.train.tag), min_level=Logging.Info)
+        save_config(config, joinpath(logger.logdir, "config.yaml"))
+    else
+        logger = nothing
+    end
 
     # Build model
     model = eval(Meta.parse(config.model.name))
@@ -73,7 +77,6 @@ function Trainer(config_file)#; model_builder)
     else
         opt = eval(Meta.parse(name))(args...)
     end
-
 
     (; log_every_n_epochs, save_every_n_epochs, nb_epochs) = config.train
 
@@ -162,7 +165,7 @@ end
 
 # Specific constructors
 function FenchelYoungGLM(; nb_features, ε, M, model_builder::String)
-    encoder = Chain(Dense(nb_features => 1), vec)
+    encoder = Chain(Dense(nb_features => 1, bias=false), vec)
     maximizer(θ::AbstractVector; instance) = easy_problem(
         θ; instance, model_builder=eval(Meta.parse(model_builder))
     )
@@ -182,7 +185,7 @@ function normalizing(x::Vector)
 end
 
 function PerturbedGLM(; nb_features, ε, M, model_builder::String, seed=nothing)
-    encoder = Chain(Dense(nb_features => 1), vec)
+    encoder = Chain(Dense(nb_features => 1, bias=false), vec)
     maximizer(θ::AbstractVector; instance) = easy_problem(
         θ; instance, model_builder=eval(Meta.parse(model_builder))
     )
@@ -190,7 +193,22 @@ function PerturbedGLM(; nb_features, ε, M, model_builder::String, seed=nothing)
 
     cost(y; instance) = evaluate_solution(y, instance)
 
-    loss = PerturbedComposition(PerturbedAdditive(maximizer; ε=ε, nb_samples=M, seed=seed), cost)
+    loss = ProbabilisticComposition(PerturbedAdditive(maximizer; ε=ε, nb_samples=M, seed=seed), cost)
+    pipeline_loss(X) = mean(loss(encoder(x.features); instance=x) for x in X)
+
+    return pipeline, pipeline_loss, cost, ExperienceDataset
+end
+
+function PerturbedMultiplicativeGLM(; nb_features, ε, M, model_builder::String, seed=nothing)
+    encoder = Chain(Dense(nb_features => 1, bias=false), vec)
+    maximizer(θ::AbstractVector; instance) = easy_problem(
+        θ; instance, model_builder=eval(Meta.parse(model_builder))
+    )
+    pipeline = Pipeline(encoder, maximizer)
+
+    cost(y; instance) = evaluate_solution(y, instance)
+
+    loss = ProbabilisticComposition(PerturbedMultiplicative(maximizer; ε=ε, nb_samples=M, seed=seed), cost)
     pipeline_loss(X) = mean(loss(encoder(x.features); instance=x) for x in X)
 
     return pipeline, pipeline_loss, cost, ExperienceDataset

@@ -78,7 +78,7 @@ function path_solution_from_JuMP_array(x::AbstractArray, graph::AbstractGraph)
         while current_task < nb_tasks
             sol[v_index, current_task-1] = true
             next_tasks = [
-                i for i in outneighbors(graph, current_task) if x[current_task, i] ≈ 1
+                i for i in outneighbors(graph, current_task) if isapprox(x[current_task, i], 1; atol=0.1)
             ]
             # TODO : there is a more efficient way to search for next task (but more dangerous)
             if length(next_tasks) == 1

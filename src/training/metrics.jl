@@ -27,10 +27,10 @@ function (m::Loss)(trainer::Trainer; train, epoch, kwargs...)
     value = mean(trainer.loss(t...) for t in loader(data))
 
     # Save model if we beat best loss (store best loss in variable ??)
-    if !train && value < m.best_value
-        m.best_value = value
-        save_model(trainer, epoch; best=true)
-    end
+    # if !train && value < m.best_value
+    #     m.best_value = value
+    #     save_model(trainer, epoch; best=true)
+    # end
     return value
 end
 
@@ -114,6 +114,7 @@ function (m::AverageCost)(trainer::Trainer; train, Y_pred, kwargs...)
     cost_gap = mean(
         c for (c, c_opt) in zip(train_cost, train_cost_opt)
     )
+
     return cost_gap
 end
 
@@ -121,6 +122,63 @@ function log_last_measure!(m::AverageCost, logger::AbstractLogger; train=true, s
     str = train ? "train" : "validation"
     with_logger(logger) do
         @info "$str" average_cost=m.history[end] log_step_increment=step_increment
+    end
+end
+
+##
+
+mutable struct AllCosts <: AbstractMetric
+    name::String
+    best_value::Float64
+    average_cost_gap::Vector{Float64}
+    max_cost_gap::Vector{Float64}
+    average_cost::Vector{Float64}
+    max_cost::Vector{Float64}
+end
+
+AllCosts(name="All costs") = AllCosts(name, Inf, Float64[], Float64[], Float64[], Float64[])
+
+function compute_value!(m::AllCosts, t::Trainer; kwargs...)
+    a, b, c, d = m(t; kwargs...)
+    push!(m.average_cost_gap, a)
+    push!(m.max_cost_gap, b)
+    push!(m.average_cost, c)
+    push!(m.max_cost, d)
+end
+
+function (m::AllCosts)(trainer::Trainer; train, epoch, Y_pred, kwargs...)
+    (; cost) = trainer
+    data = train ? trainer.data.train : trainer.data.validation
+    train_cost = [cost(y; instance=x) for (x, y) in zip(data.X, Y_pred)]
+    train_cost_opt = [cost(y; instance=x) for (x, y) in zip(data.X, data.Y)]
+
+    average_cost_gap = mean(
+        (c - c_opt) / abs(c_opt) for (c, c_opt) in zip(train_cost, train_cost_opt)
+    )
+    max_cost_gap = maximum(
+        (c - c_opt) / abs(c_opt) for (c, c_opt) in zip(train_cost, train_cost_opt)
+    )
+    average_cost = mean(
+        c for (c, c_opt) in zip(train_cost, train_cost_opt)
+    )
+    max_cost = maximum(
+        c for (c, c_opt) in zip(train_cost, train_cost_opt)
+    )
+
+    if !train && average_cost < m.best_value
+        m.best_value = average_cost
+        save_model(trainer, epoch; best=true)
+    end
+    return average_cost_gap, max_cost_gap, average_cost, max_cost
+end
+
+function log_last_measure!(m::AllCosts, logger::AbstractLogger; train=true, step_increment=0)
+    str = train ? "train" : "validation"
+    with_logger(logger) do
+        @info "$str" average_cost_gap=m.average_cost_gap[end] log_step_increment=step_increment
+        @info "$str" max_cost_gap=m.max_cost_gap[end] log_step_increment=0
+        @info "$str" average_cost=m.average_cost[end] log_step_increment=0
+        @info "$str" max_cost=m.max_cost[end] log_step_increment=0
     end
 end
 
