@@ -20,7 +20,7 @@ end
 
 Main structure used for training an InferOpt model.
 """
-struct Trainer{D,P,L,C,M,O,LL}
+struct Trainer{D,P,L,C,M,O,LL,F}
     data::D
     pipeline::P
     loss::L
@@ -31,6 +31,7 @@ struct Trainer{D,P,L,C,M,O,LL}
     log_every_n_epochs::Int
     save_every_n_epochs::Int
     nb_epochs::Int
+    normalization_factor::F
 end
 
 function Trainer(config_file; create_logger=true)#; model_builder)
@@ -49,6 +50,7 @@ function Trainer(config_file; create_logger=true)#; model_builder)
     # Load data and create dataset
     (; data_dir, train_file, validation_file) = config.data
 
+
     train_dir = joinpath(data_dir, train_file)
     dataset_train = load(train_dir)
     X_train, Y_train = dataset_train["X"], dataset_train["Y"] # TODO: remove hardcoded stuff
@@ -56,6 +58,12 @@ function Trainer(config_file; create_logger=true)#; model_builder)
     val_dir = joinpath(data_dir, validation_file)
     dataset_val = load(val_dir)
     X_val, Y_val = dataset_val["X"], dataset_val["Y"] # TODO: remove hardcoded stuff
+
+    # Normalize data by reducing by its variance
+    data_info = read_config(joinpath(data_dir, "info.yaml"))
+    σ = data_info.σ_train
+    reduce_data!(X_train, σ)
+    reduce_data!(X_val, σ)
 
     data_train = dataset(X_train, Y_train)
     data_val = dataset(X_val, Y_val)
@@ -91,6 +99,7 @@ function Trainer(config_file; create_logger=true)#; model_builder)
         log_every_n_epochs,
         save_every_n_epochs,
         nb_epochs,
+        σ,
     )
 end
 
@@ -116,7 +125,7 @@ end
 
 function save_model(trainer::Trainer, epoch::Integer; best=false)
     if best
-        jldsave("$(trainer.logger.logdir)/best.jld2", data=trainer.pipeline.encoder, epoch=epoch)
+        jldsave("$(trainer.logger.logdir)/best.jld2", data=trainer.pipeline.encoder, epoch=epoch, σ=trainer.normalization_factor)
         return
     end
 
@@ -125,7 +134,7 @@ function save_model(trainer::Trainer, epoch::Integer; best=false)
         return nothing
     end
     # else
-    jldsave("$(trainer.logger.logdir)/model_$epoch.jld2", data=trainer.pipeline.encoder)
+    jldsave("$(trainer.logger.logdir)/model_$epoch.jld2", data=trainer.pipeline.encoder, σ=trainer.normalization_factor)
 end
 
 function my_custom_train!(loss, ps, data, opt)
@@ -180,9 +189,9 @@ end
 
 # --
 
-function normalizing(x::Vector)
-    return x / LinearAlgebra.norm(x)
-end
+# function normalizing(x::Vector)
+#     return x / LinearAlgebra.norm(x)
+# end
 
 function PerturbedGLM(; nb_features, ε, M, model_builder::String, seed=nothing)
     encoder = Chain(Dense(nb_features => 1, bias=false), vec)

@@ -21,6 +21,20 @@ function get_nb_vehicles(solution::Solution)
     return get_nb_vehicles(solution.path_value)
 end
 
+function get_routes(solution::Solution)
+    res = Vector{Int}[]
+    for vehicle in 1:get_nb_vehicles(solution)
+        resv = Int[]
+        for (index, value) in enumerate(solution.path_value[vehicle, :])
+            if value
+                push!(resv, index+1)
+            end
+        end
+        push!(res, resv)
+    end
+    return res
+end
+
 function Solution(value::BitVector, instance::Instance)
     graph = instance.graph
     nb_tasks = nv(graph)

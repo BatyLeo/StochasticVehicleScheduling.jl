@@ -344,6 +344,9 @@ function compute_features(city::City)
         # compute cumulative distribution
         features[slack_cumulative_distribution_indices, i] = [mean(slacks .<= x) for x in cumul]
     end
+    #
+    # features[1] += features[2]
+    # return features[1:end-1]
     return features
 end
 

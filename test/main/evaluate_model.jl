@@ -6,18 +6,17 @@ using Statistics: mean
 using ProgressMeter
 
 log_dirs = [
-    #"imitation_25tasks10scenarios_exact_1",
     # "imitation_25tasks10scenarios",
-    # "imitation_25tasks10scenarios_garbage",
-    "imitation_25tasks10scenarios_exact",
-    "imitation_50tasks50scenarios",
-    "imitation_100tasks50scenarios",
-    # "experience_25tasks10scenarios_exact",
-    "experience_25tasks10scenarios_exact_2",
-    "experience_50tasks50scenarios_2",
-    "experience_100tasks50scenarios_2",
+    # "imitation_50tasks50scenarios",
+    # "imitation_100tasks50scenarios",
+    # "experience_25tasks10scenarios",
+    # "experience_50tasks50scenarios",
+    # "experience_100tasks50scenarios",
     # "imitation_mixed",
+    "experience_mixed",
 ]
+
+# TODO: mixed
 
 # log_dirs = [
 #     "experience_25tasks10scenarios_exact",
@@ -65,6 +64,12 @@ function evaluate_model(model_dir, test_data)
         c / x.city.nb_tasks for (c, x) in zip(train_cost, X_test)
     )
     @info "$log_dir -> $test_data" step average_cost_gap max_cost_gap average_cost_per_task
+    return Dict(
+        "step" => step ,
+        "average_cost_gap" => average_cost_gap,
+        "max_cost_gap" => max_cost_gap,
+        "average_cost_per_task" => average_cost_per_task,
+    )
 end
 
 function evaluate_cost(model_dir, test_data)
@@ -91,12 +96,15 @@ function evaluate_cost(model_dir, test_data)
 
     average_cost_per_task = c_sum / c
     @info "$log_dir -> $test_data" step average_cost_per_task
+    return Dict("step" => step, "average_cost_per_task" => average_cost_per_task)
 end
 
 for log_dir in log_dirs
+    res = Dict()
     for test_data in test_datasets
-        evaluate_model(log_dir, test_data)
+        res[test_data] = evaluate_model(log_dir, test_data)
     end
-    #evaluate_cost(log_dir, "1000tasks10scenarios")
+    res["1000tasks10scenarios"] = evaluate_cost(log_dir, "1000tasks10scenarios")
+    jldsave(joinpath("final_experiments", "results", "$log_dir.jld2"), data=res)
     println("---")
 end

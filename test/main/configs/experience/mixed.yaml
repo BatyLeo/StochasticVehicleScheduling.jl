@@ -4,7 +4,7 @@ data:
   validation_file: "validation.jld2"
 train:
   log_dir: "final_experiments"
-  tag: "imitation_mixed"
+  tag: "experience_mixed"
   batchsize: 1
   metrics:
     train_and_validation:
@@ -15,13 +15,13 @@ train:
   optimizer:
     name: "ADAM"
     args:
-  nb_epochs: 50
-  save_every_n_epochs: 50
+  nb_epochs: 200
+  save_every_n_epochs: 200
   log_every_n_epochs: 1
 model:
-  name: "FenchelYoungGLM"
+  name: "PerturbedGLM"
   args:
     M: 20
     nb_features: 20
-    ε: 0.1
+    ε: 300
     model_builder: "grb_model"
