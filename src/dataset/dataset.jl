@@ -46,7 +46,7 @@ function reduce_data!(X, σ)
 end
 
 function generate_samples(nb_samples::Integer; heuristic=true, labeled=true, city_kwargs)
-    @info city_kwargs
+    @info "Generating dataset..."  city_kwargs
     X = [Instance(create_random_city(; city_kwargs...)) for _ in 1:nb_samples]
     if !labeled
         Y = Solution[]
@@ -88,16 +88,17 @@ function generate_dataset(
     nb_total_samples = nb_train_samples + nb_val_samples + nb_test_samples
 
     # Fix the seed and generate all the samples
-    Random.seed!(67)
+    Random.seed!(random_seed)
     X, Y = generate_samples(nb_total_samples; heuristic=heuristic, labeled=labeled, city_kwargs)
 
     if nb_train_samples > 0
         train_slice = 1:nb_train_samples
         X_train = X[train_slice]
-        μ, σ, maxi = compute_μ_σ(X)
+        # ! compute statistics on TRAIN dataset
+        μ, σ, maxi = compute_μ_σ(X_train)
         config["μ_train"] = μ
         config["σ_train"] = σ
-        config["max"] = maxi
+        config["max_train"] = maxi
         train_file = joinpath(dataset_folder, "train.jld2")
         if labeled
             Y_train = Y[train_slice]

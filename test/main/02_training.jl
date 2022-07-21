@@ -3,12 +3,12 @@ using StochasticVehicleScheduling
 
 function main_imitation()
     files = [
-        # "mixed.yaml",
         "25tasks10scenarios.yaml",
+        "50tasks50scenarios.yaml",
+        "100tasks50scenarios.yaml",
+        #"mixed.yaml",
         #"25tasks10scenarios_exact.yaml",
         # "25tasks10scenarios_garbage.yaml",
-        #"50tasks50scenarios.yaml",
-        #"100tasks50scenarios.yaml",
     ]
     for file in files
         Random.seed!(67);

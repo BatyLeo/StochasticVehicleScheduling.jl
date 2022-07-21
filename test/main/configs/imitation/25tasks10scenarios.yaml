@@ -15,13 +15,13 @@ train:
   optimizer:
     name: "ADAM"
     args:
-  nb_epochs: 100
-  save_every_n_epochs: 100
+  nb_epochs: 50
+  save_every_n_epochs: 50
   log_every_n_epochs: 1
 model:
   name: "FenchelYoungGLM"
   args:
-    M: 5
+    M: 20
     nb_features: 20
     ε: 0.1
     model_builder: "grb_model"

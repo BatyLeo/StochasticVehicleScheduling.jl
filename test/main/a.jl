@@ -2,21 +2,21 @@ using StochasticVehicleScheduling
 using JLD2
 using Flux
 
-dataset_path = joinpath("data", "50tasks50scenarios", "test.jld2");
+dataset_path = joinpath("data", "25tasks10scenarios", "test.jld2");
 data = load(dataset_path);
 X_test = data["X"];
 Y_test = data["Y"];
 
-model_path = joinpath("final_experiments", "imitation_25tasks10scenarios_1", "best.jld2");
+model_path = joinpath("final_experiments", "imitation_50tasks50scenarios", "best.jld2");
 model = load(model_path);
 encoder = model["data"]
-encoder[1].weight'
+σ = model["σ"]
+Flux.params(encoder)[1]'
+encoder[1].weight ./= reshape(σ, 1, 20)
 Flux.params(encoder)[1]'
 
 θ_pred = [encoder(x.features) for x in X_test];
 Y_pred = [easy_problem(encoder(x.features); instance=x, model_builder=grb_model) for x in X_test];
-
-model
 
 x, y_pred = X_test[1], Y_pred[1];
 

@@ -14,7 +14,11 @@ generate_dataset(dataset_folder, 50, 50, 50; labeled=true, heuristic=true, city_
 # Mixed
 # using JLD2
 
-# datasets = ["25tasks10scenarios_exact_uncentered", "50tasks50scenarios_uncentered", "100tasks50scenarios_uncentered"];
+# datasets = [
+#     "25tasks10scenarios",
+#     "50tasks50scenarios",
+#     "100tasks50scenarios"
+# ];
 
 # for setting in ["train", "validation", "test"]
 #     X = Instance[];
@@ -25,7 +29,7 @@ generate_dataset(dataset_folder, 50, 50, 50; labeled=true, heuristic=true, city_
 #         Y = cat(Y, data["Y"][1:15], dims=1)
 #     end
 #     slice = shuffle(1:length(X))
-#     jldsave(joinpath("data", "mixed_uncentered", "$setting.jld2"), X=X[slice], Y=Y[slice])
+#     jldsave(joinpath("data", "mixed", "$setting.jld2"), X=X[slice], Y=Y[slice])
 # end
 
 # ---

@@ -1,22 +1,19 @@
 using JLD2
 using Flux
 using StochasticVehicleScheduling
-using StochasticVehicleScheduling.Training
 using Statistics: mean
 using ProgressMeter
 
 log_dirs = [
-    # "imitation_25tasks10scenarios",
-    # "imitation_50tasks50scenarios",
-    # "imitation_100tasks50scenarios",
+    "imitation_25tasks10scenarios",
+    "imitation_50tasks50scenarios",
+    "imitation_100tasks50scenarios",
     # "experience_25tasks10scenarios",
     # "experience_50tasks50scenarios",
     # "experience_100tasks50scenarios",
     # "imitation_mixed",
-    "experience_mixed",
+    #"experience_mixed",
 ]
-
-# TODO: mixed
 
 # log_dirs = [
 #     "experience_25tasks10scenarios_exact",
@@ -25,11 +22,21 @@ log_dirs = [
 # ]
 
 test_datasets = [
-    "25tasks10scenarios_exact_uncentered",
-    "50tasks50scenarios_uncentered",
-    "100tasks50scenarios_uncentered",
-    "200tasks50scenarios_uncentered",
+    "25tasks10scenarios",
+    "50tasks50scenarios",
+    "100tasks50scenarios",
+    "200tasks50scenarios",
+    "300tasks50scenarios",
     #"mixed",
+    ]
+
+cost_only = [
+    "300tasks50scenarios",
+    "300tasks10scenarios",
+    "400tasks10scenarios",
+    "500tasks10scenarios",
+    "750tasks10scenarios",
+    "1000tasks10scenarios",
 ]
 
 function evaluate_model(model_dir, test_data)
@@ -40,7 +47,9 @@ function evaluate_model(model_dir, test_data)
 
     best_model = load(model_file)
     encoder = best_model["data"]
-    encoder[1].weight
+    σ = best_model["σ"]
+    encoder[1].weight ./= reshape(σ, 1, 20)  # rescale
+
     step = best_model["epoch"]
 
     data_dir = joinpath("data", test_data)
@@ -65,7 +74,7 @@ function evaluate_model(model_dir, test_data)
     )
     @info "$log_dir -> $test_data" step average_cost_gap max_cost_gap average_cost_per_task
     return Dict(
-        "step" => step ,
+        "step" => step,
         "average_cost_gap" => average_cost_gap,
         "max_cost_gap" => max_cost_gap,
         "average_cost_per_task" => average_cost_per_task,
@@ -81,22 +90,29 @@ function evaluate_cost(model_dir, test_data)
     best_model = load(model_file)
     encoder = best_model["data"]
     encoder[1].weight
+    σ = best_model["σ"]
+    encoder[1].weight ./= reshape(σ, 1, 20)  # rescale
     step = best_model["epoch"]
 
     data_dir = joinpath("data", test_data)
     data_test = load(joinpath(data_dir, "test.jld2"));
 
+    X_test = data_test["X"]
+
     (; cost) = trainer;
     c_sum = 0
+    c_max = 0
     c = 0
-    @showprogress for x in data_test["X"]
+    @showprogress for x in X_test
         c += 1
-        c_sum += cost(easy_problem(encoder(x.features); instance=x, model_builder=grb_model); instance=x) / x.city.nb_tasks
+        solution_cost = cost(easy_problem(encoder(x.features); instance=x, model_builder=grb_model); instance=x) / x.city.nb_tasks
+        c_max = max(solution_cost, c_max)
+        c_sum += solution_cost
     end
-
     average_cost_per_task = c_sum / c
-    @info "$log_dir -> $test_data" step average_cost_per_task
-    return Dict("step" => step, "average_cost_per_task" => average_cost_per_task)
+
+    @info "$log_dir -> $test_data" step average_cost_per_task c_max
+    return Dict("step" => step, "average_cost_per_task" => average_cost_per_task, "max_cost_per_task" => c_max)
 end
 
 for log_dir in log_dirs
@@ -104,7 +120,9 @@ for log_dir in log_dirs
     for test_data in test_datasets
         res[test_data] = evaluate_model(log_dir, test_data)
     end
-    res["1000tasks10scenarios"] = evaluate_cost(log_dir, "1000tasks10scenarios")
+    for test_data in cost_only
+        res[test_data] = evaluate_cost(log_dir, test_data)
+    end
     jldsave(joinpath("final_experiments", "results", "$log_dir.jld2"), data=res)
     println("---")
 end
