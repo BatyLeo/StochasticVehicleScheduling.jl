@@ -4,8 +4,8 @@ models = Dict(
     "imitation_25tasks10scenarios" => "25 tasks",
     "imitation_50tasks50scenarios" => "50 tasks",
     "imitation_100tasks50scenarios" => "100 tasks",
-    "imitation_mixed" => "mixed",
-    "experience_mixed" => "mixed",
+    # "imitation_mixed" => "mixed",
+    # "experience_mixed" => "mixed",
     "experience_25tasks10scenarios" => "25 tasks",
     "experience_50tasks50scenarios" => "50 tasks",
     "experience_100tasks50scenarios" => "100 tasks",
@@ -15,7 +15,7 @@ tags = Dict(
     "loss" => "Loss",
     "max_cost_gap" => "Max cost gap",
     "average_cost_gap" => "Average cost gap",
-    "average_cost" => "Average cost",
+    "average_cost_per_task" => "Average cost per task",
 )
 
 function read_model(model_dir)

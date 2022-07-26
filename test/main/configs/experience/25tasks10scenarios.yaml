@@ -1,10 +1,10 @@
 data:
-  data_dir: "data/25tasks10scenarios_exact_uncentered"
+  data_dir: "data/25tasks10scenarios"
   train_file: "train.jld2"
   validation_file: "validation.jld2"
 train:
   log_dir: "final_experiments"
-  tag: "experience_25tasks10scenarios_exact"
+  tag: "experience_25tasks10scenarios"
   batchsize: 1
   metrics:
     train_and_validation:

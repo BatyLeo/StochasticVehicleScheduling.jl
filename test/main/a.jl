@@ -7,7 +7,7 @@ data = load(dataset_path);
 X_test = data["X"];
 Y_test = data["Y"];
 
-model_path = joinpath("final_experiments", "imitation_50tasks50scenarios", "best.jld2");
+model_path = joinpath("final_experiments", "imitation_25tasks10scenarios", "best.jld2");
 model = load(model_path);
 encoder = model["data"]
 σ = model["σ"]

@@ -8,9 +8,9 @@ log_dirs = [
     "imitation_25tasks10scenarios",
     "imitation_50tasks50scenarios",
     "imitation_100tasks50scenarios",
-    # "experience_25tasks10scenarios",
-    # "experience_50tasks50scenarios",
-    # "experience_100tasks50scenarios",
+    "experience_25tasks10scenarios",
+    "experience_50tasks50scenarios",
+    "experience_100tasks50scenarios",
     # "imitation_mixed",
     #"experience_mixed",
 ]
@@ -26,17 +26,17 @@ test_datasets = [
     "50tasks50scenarios",
     "100tasks50scenarios",
     "200tasks50scenarios",
-    "300tasks50scenarios",
+    #"300tasks50scenarios",
     #"mixed",
-    ]
+]
 
 cost_only = [
-    "300tasks50scenarios",
     "300tasks10scenarios",
     "400tasks10scenarios",
     "500tasks10scenarios",
     "750tasks10scenarios",
     "1000tasks10scenarios",
+    "mixed",
 ]
 
 function evaluate_model(model_dir, test_data)
@@ -111,7 +111,7 @@ function evaluate_cost(model_dir, test_data)
     end
     average_cost_per_task = c_sum / c
 
-    @info "$log_dir -> $test_data" step average_cost_per_task c_max
+    @info "$log_dir -> $test_data" step c_max average_cost_per_task
     return Dict("step" => step, "average_cost_per_task" => average_cost_per_task, "max_cost_per_task" => c_max)
 end
 

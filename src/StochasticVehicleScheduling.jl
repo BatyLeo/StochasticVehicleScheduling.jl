@@ -98,4 +98,6 @@ export train_loop!
 # Visualization
 export plot_instance, plot_solution
 
+export save_config
+
 end
