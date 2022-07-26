@@ -1,106 +1,79 @@
-using JLD2
 using Flux
+using GLMakie
+using JLD2
 using StochasticVehicleScheduling
 
+function visualize_solution(x, y, start_times, vehiclesgt; output_file="groundtruth.png")
+    obj = evaluate_solution(y, x)
+    axis2 = (; title="Total objective value: $obj", xlabel="Time")
+    groundtruth = evaluate_solution2(y, x)
+    position = [(i, j) for (i, j) in zip(start_times, vehiclesgt)]
+    fig2, _, hm2 = scatter(position;
+        color=groundtruth, markersize=groundtruth, axis=axis2, colormap=:thermal);
+    for v in 1:size(y.path_value, 1)
+        xs = Float64[]
+        ys = Int[]
+        for i in 1:50
+            if y.path_value[v, i] == 1
+                push!(xs, start_times[i])
+                push!(ys, vehiclesgt[i])
+            end
+        end
+        if length(xs) == 0
+            break
+        end
+        for i in 1:length(xs)-1
+            arrows!([xs[i]], [ys[i]], [xs[i+1] - xs[i]], [ys[i+1] - ys[i]];
+                arrowsize=15, lengthscale=1.0)
+        end
+        #lines!(xs, ys, color=:black)
+    end
+    Colorbar(fig2[:, end+1], hm2);
+    save(output_file, fig2)
+    return
+end
 
-#encoder = load("logs/learn_by_imitation/model_100.jld2")["data"]
-encoder = load("logs/test_new_inferopt_normalized_16/model_10000.jld2")["data"]
-encoder = Chain(Dense(20 => 1), vec)
+# encoder = load("logs/test_new_inferopt_normalized_16/model_10000.jld2")["data"]
+encoder = Chain(Dense(20 => 1, bias=false), vec)
 
-data = load("data/data50_normalized/test.jld2");
+best = load("final_experiments/imitation_50tasks50scenarios/model_50.jld2")
+encoder = best["data"]
+σ = best["σ"]
+encoder[1].weight' ./= σ
+
+best2 = load("final_experiments/experience_50tasks50scenarios/best.jld2")
+encoder2 = best2["data"]
+σ2 = best2["σ"]
+encoder2[1].weight' ./= σ2
+
+data = load("data/50tasks50scenarios/train.jld2");
 X = data["X"];
 Y = data["Y"];
 
-# pred = zeros(length(X), nb_tasks)
-# groundtruth = zeros(length(Y), nb_tasks)
-
-# for (i, (x, y)) in enumerate(zip(X, Y))
-#     #x = X[1];
-#     θ = encoder(x.features);
-#     ypred = easy_problem(θ; instance=x);
-#     nb_tasks = 50
-#     pred[i, :] = evaluate_solution2(ypred, x)
-#     groundtruth[i, :] = evaluate_solution2(y, x)
-# end
-
-# size(pred)
-
-# axis = (; title="Groundtruth delays", xlabel="Task index", ylabel="Instance index")
-# fig, ax, hm = heatmap(range(1, 50), range(1, 50), groundtruth; axis=axis);
-# Colorbar(fig[:, end+1], hm);
-# save("fig.png", fig)
-
-# axis2 = (; title = "Predicted delays", xlabel = "Task index", ylabel="Instance index")
-# fig2, ax2, hm2 = heatmap(range(1, 50), range(1, 50), pred; axis=axis2);
-# Colorbar(fig2[:, end+1], hm2);
-# save("fig2.png", fig2)
-
-
-## ---
-using GLMakie
-
-index = 1
+index = 10
 x = X[index];
 y = Y[index];
-ypred = Solution(easy_problem(encoder(x.features); instance=x), x);
 _, ypred = solve_deterministic_VSP(x; include_delays=true)
+ypred1 = Solution(easy_problem(encoder(x.features); instance=x), x);
+ypred2 = Solution(easy_problem(encoder2(x.features); instance=x), x);
 
 nb_tasks = length(x.city.tasks)-2
-
 start_times = [task.start_time for task in x.city.tasks[2:end-1]]
-
-axis2 = (; title="Groundtruth:", xlabel="Time")
 vehiclesgt = [argmax(y.path_value[:, i]) for i in 1:nb_tasks]
-groundtruth = evaluate_solution2(y, x)
-position = [(i, j) for (i, j) in zip(start_times, vehiclesgt)]
-fig2, ax2, hm2 = scatter(position;
-    color=groundtruth, markersize=groundtruth, axis=axis2, colormap=:thermal);
-#text!(ax2, ["$i" for i in 1:nb_tasks], position=position, font="JuliaMono")
-for v in 1:size(y.path_value, 1)
-    xs = Float64[]
-    ys = Int[]
-    for i in 1:50
-        if y.path_value[v, i] == 1
-            push!(xs, start_times[i])
-            push!(ys, vehiclesgt[i])
-        end
-    end
-    if length(xs) == 0
-        break
-    end
-    for i in 1:length(xs)-1
-        arrows!([xs[i]], [ys[i]], [xs[i+1] - xs[i]], [ys[i+1] - ys[i]];
-            arrowsize=15, lengthscale=1.0)
-    end
-    #lines!(xs, ys, color=:black)
-end
-Colorbar(fig2[:, end+1], hm2);
-save("grountruth.png", fig2)
+visualize_solution(x, y, start_times, vehiclesgt)
+visualize_solution(x, ypred, start_times, vehiclesgt)
+visualize_solution(x, ypred1, start_times, vehiclesgt)
+visualize_solution(x, ypred2, start_times, vehiclesgt)
 
-axis = (; title="Prediction: random", xlabel="Time")
-vehiclespred = [argmax(ypred.path_value[:, i]) for i in 1:nb_tasks]
-pred = evaluate_solution2(ypred, x)
-#position = [(i, j) for (i, j) in zip(start_times, vehiclespred)]
-fig, ax, hm = scatter(position;
-    color=pred, markersize=pred, axis=axis, colormap=:thermal);
-#text!(ax, ["$i" for i in 1:nb_tasks], position=position, font="JuliaMono")
-for v in 1:size(y.path_value, 1)
-    xs = Float64[]
-    ys = Int[]
-    for i in 1:50
-        if ypred.path_value[v, i] == 1
-            push!(xs, start_times[i])
-            push!(ys, vehiclesgt[i])
-        end
-    end
-    if length(xs) == 0
-        break
-    end
-    for i in 1:length(xs)-1
-        arrows!([xs[i]], [ys[i]], [xs[i+1] - xs[i]], [ys[i+1] - ys[i]];
-            arrowsize=15, lengthscale=1.0)
-    end
-    #lines!(xs, ys, color=:black)
-end
-Colorbar(fig[:, end+1], hm);
-save("random.png", fig)
+evaluate_solution(ypred2, x)
+evaluate_solution(y, x)
+
+9000 + 2*sum(evaluate_solution2(ypred2, x))
+9000 + 2*sum(evaluate_solution2(y, x))
+
+StochasticVehicleScheduling.get_nb_vehicles(y)
+StochasticVehicleScheduling.get_nb_vehicles(ypred2)
+
+is_admissible(ypred, x)
+
+ypred2.path_value
