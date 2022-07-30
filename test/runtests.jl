@@ -2,9 +2,9 @@ using StochasticVehicleScheduling
 using Random
 using Test
 using UnicodePlots
-using Gurobi
+using Cbc
 
-const GRB_ENV = Gurobi.Env()
+# const GRB_ENV = Gurobi.Env()
 
 function short(solution::Solution)
     res = Vector{Int}[]
@@ -25,7 +25,7 @@ end
 
 @testset verbose=true "StochasticVehicleScheduling.jl" begin
     @testset "Miscellaneous" begin
-        include("miscellaneous.jl")
+        # include("miscellaneous.jl")
         include("mini_example.jl")
     end
 
@@ -34,10 +34,10 @@ end
     end
 
     @testset "Features" begin
-        include("dataset.jl")
+        # include("dataset.jl")
     end
 
     @testset "Tutorial" begin
-        include("tutorial.jl")
+        # include("tutorial.jl")
     end
 end

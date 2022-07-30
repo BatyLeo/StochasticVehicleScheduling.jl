@@ -7,7 +7,6 @@ using Flux
 using GLMakie
 using GLPK
 using Graphs
-using Gurobi
 using InferOpt
 using JLD2
 using JuMP
@@ -18,19 +17,15 @@ using NamedTupleTools
 using Printf
 using ProgressMeter
 using Random
+using Requires
 using SparseArrays
 using Statistics
 using Test
 using TensorBoardLogger
 using YAML
 
-
-# Gurobi package setup (see https://github.com/jump-dev/Gurobi.jl/issues/424)
-const GRB_ENV = Ref{Gurobi.Env}()
-
 function __init__()
-    GRB_ENV[] = Gurobi.Env()
-    return
+    @require Gurobi="2e9cd046-0924-5485-92f1-d5272153d98b" include("gurobi_stuff.jl")
 end
 
 include("utils/utils.jl")
