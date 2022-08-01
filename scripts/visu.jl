@@ -42,14 +42,14 @@ function visualize_solution(x, y, start_times, vehiclesgt; output_file="groundtr
         end
         #lines!(xs, ys, color=:black)
     end
-    Colorbar(fig2[:, end+1], hm2, ticks = 0:5:60);
+    Colorbar(fig2[:, end + 1], hm2; ticks=0:5:60)
     save(output_file, fig2)
     return nothing
 end
 
 # encoder = load("logs/test_new_inferopt_normalized_16/model_10000.jld2")["data"]
 function main(index)
-    encoder = Chain(Dense(20 => 1, bias=false), vec)
+    encoder = Chain(Dense(20 => 1; bias=false), vec)
 
     best = load("final_experiments/imitation_50tasks50scenarios/model_50.jld2")
     encoder = best["data"]
@@ -61,23 +61,29 @@ function main(index)
     σ2 = best2["σ"]
     encoder2[1].weight' ./= σ2
 
-    data = load("data/50tasks50scenarios/train.jld2");
-    X = data["X"];
-    Y = data["Y"];
+    data = load("data/50tasks50scenarios/train.jld2")
+    X = data["X"]
+    Y = data["Y"]
 
-    x = X[index];
-    y = Y[index];
+    x = X[index]
+    y = Y[index]
     _, ypred = solve_deterministic_VSP(x; include_delays=true)
-    ypred1 = Solution(easy_problem(encoder(x.features); instance=x), x);
-    ypred2 = Solution(easy_problem(encoder2(x.features); instance=x), x);
+    ypred1 = Solution(easy_problem(encoder(x.features); instance=x), x)
+    ypred2 = Solution(easy_problem(encoder2(x.features); instance=x), x)
 
-    nb_tasks = length(x.city.tasks)-2
-    start_times = [task.start_time for task in x.city.tasks[2:end-1]]
+    nb_tasks = length(x.city.tasks) - 2
+    start_times = [task.start_time for task in x.city.tasks[2:(end - 1)]]
     vehiclesgt = [argmax(y.path_value[:, i]) for i in 1:nb_tasks]
-    visualize_solution(x, y, start_times, vehiclesgt; output_file="figures/local_search.png")
+    visualize_solution(
+        x, y, start_times, vehiclesgt; output_file="figures/local_search.png"
+    )
     #visualize_solution(x, ypred, start_times, vehiclesgt; output_file="figures/local_search.png")
-    visualize_solution(x, ypred1, start_times, vehiclesgt; output_file="figures/imitation.png")
-    visualize_solution(x, ypred2, start_times, vehiclesgt; output_file="figures/experience.png")
+    visualize_solution(
+        x, ypred1, start_times, vehiclesgt; output_file="figures/imitation.png"
+    )
+    return visualize_solution(
+        x, ypred2, start_times, vehiclesgt; output_file="figures/experience.png"
+    )
 end
 
 main(42)

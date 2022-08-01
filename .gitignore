@@ -8,3 +8,4 @@
 /data
 /figures
 /final_experiments*
+scripts/*.toml

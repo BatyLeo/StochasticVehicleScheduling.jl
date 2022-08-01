@@ -29,7 +29,12 @@ end
 
 @testset verbose = true "StochasticVehicleScheduling.jl" begin
     @testset verbose = true "Code quality (Aqua.jl)" begin
-        Aqua.test_all(StochasticVehicleScheduling; deps_compat=true, project_extras=true, ambiguities=false)
+        Aqua.test_all(
+            StochasticVehicleScheduling;
+            deps_compat=false,
+            project_extras=true,
+            ambiguities=false,
+        )
     end
 
     @testset "Miscellaneous" begin
