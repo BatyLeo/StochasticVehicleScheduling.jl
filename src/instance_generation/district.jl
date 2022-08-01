@@ -11,10 +11,20 @@ struct District
     scenario_delay::Matrix{Float64}
 end
 
+"""
+    District(; random_delay::LogNormal{Float64}, nb_scenarios::Int)
+
+Initialize a district with a given number of scenarios, with zeros in `scenario_delay`.
+"""
 function District(; random_delay::LogNormal{Float64}, nb_scenarios::Int)
     return District(random_delay, zeros(nb_scenarios, 24))
 end
 
+"""
+    scenario_next_delay(previous_delay, random_delay)
+
+Return one scenario of future delay given current delay and delay distribution.
+"""
 function scenario_next_delay(previous_delay::Real, random_delay::Distribution)
     return previous_delay / 2.0 + rand(random_delay)
 end

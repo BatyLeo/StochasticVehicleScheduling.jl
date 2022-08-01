@@ -1,6 +1,5 @@
 # # End-to-end learning pipeline using `InferOpt`
 
-
 #=
 (Tutorial that doesn't use training wrappers provided by the package)
 
@@ -57,7 +56,9 @@ function train_test_split(X::AbstractVector, Y::AbstractVector, split_ratio::Rea
     return (X_train=X_train, Y_train=Y_train, X_test=X_test, Y_test=Y_test)
 end
 
-X, Y = generate_samples(nb_samples; heuristic=true, labeled=true, city_kwargs=(; nb_tasks, nb_scenarios))
+X, Y = generate_samples(
+    nb_samples; heuristic=true, labeled=true, city_kwargs=(; nb_tasks, nb_scenarios)
+)
 X_train, Y_train, X_test, Y_test = train_test_split(X, Y, split_ratio)
 nb_features = size(X_train[1].features, 1)
 data_train, data_test = zip(X_train, Y_train), zip(X_test, Y_test);
@@ -67,7 +68,7 @@ data_train, data_test = zip(X_train, Y_train), zip(X_test, Y_test);
 # ### Initialization
 
 # Initialize the GLM predictor:
-model = Chain(Dense(nb_features => 1, bias=false), vec)
+model = Chain(Dense(nb_features => 1; bias=false), vec)
 
 #
 

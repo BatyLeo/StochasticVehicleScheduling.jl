@@ -19,8 +19,8 @@ using Random
 using Requires
 using SparseArrays
 using Statistics
-using Test
 using TensorBoardLogger
+using Test
 using YAML
 
 function __init__()
@@ -52,7 +52,7 @@ include("training/metrics.jl")
 include("training/perf.jl")
 
 # Data strutures
-export create_random_city
+export create_random_city, create_random_instance
 export Instance, Solution
 export is_admissible
 

@@ -27,7 +27,7 @@ struct Task
 end
 
 function Task(;
-    type::TaskType,
+    type::TaskType=job,
     start_point::Point,
     end_point::Point,
     start_time::Float64,
@@ -56,11 +56,6 @@ for each scenario.
 function roll(task::Task)
     nb_scenarios = length(task.scenario_start_time)
     task.scenario_start_time .= task.start_time .+ rand(task.random_delay, nb_scenarios)
-    # # Draw each scenario
-    # for s in eachindex(task.scenario_start_time)
-    #     delay = rand(task.random_delay)
-    #     task.scenario_start_time[s] = task.start_time + delay
-    # end
     return nothing
 end
 
