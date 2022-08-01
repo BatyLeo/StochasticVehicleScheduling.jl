@@ -46,7 +46,7 @@ for (model, text) in models
         end
 
         fig = Figure()
-        ax = Axis(fig[1, 1], yscale=log10)
+        ax = Axis(fig[1, 1]; yscale=log10)
         ax.xlabel = "epochs"
 
         ax.title = value

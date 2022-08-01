@@ -8,8 +8,9 @@ function visualize_solution(x, y, start_times, vehiclesgt; output_file="groundtr
     axis2 = (; title="Total objective value: $obj", xlabel="Time")
     groundtruth = evaluate_solution2(y, x)
     position = [(i, j) for (i, j) in zip(start_times, vehiclesgt)]
-    fig2, _, hm2 = scatter(position;
-        color=groundtruth, markersize=groundtruth, axis=axis2, colormap=:thermal);
+    fig2, _, hm2 = scatter(
+        position; color=groundtruth, markersize=groundtruth, axis=axis2, colormap=:thermal
+    )
     for v in 1:size(y.path_value, 1)
         xs = Float64[]
         ys = Int[]
@@ -22,19 +23,25 @@ function visualize_solution(x, y, start_times, vehiclesgt; output_file="groundtr
         if length(xs) == 0
             break
         end
-        for i in 1:length(xs)-1
-            arrows!([xs[i]], [ys[i]], [xs[i+1] - xs[i]], [ys[i+1] - ys[i]];
-                arrowsize=15, lengthscale=1.0)
+        for i in 1:(length(xs) - 1)
+            arrows!(
+                [xs[i]],
+                [ys[i]],
+                [xs[i + 1] - xs[i]],
+                [ys[i + 1] - ys[i]];
+                arrowsize=15,
+                lengthscale=1.0,
+            )
         end
         #lines!(xs, ys, color=:black)
     end
-    Colorbar(fig2[:, end+1], hm2);
+    Colorbar(fig2[:, end + 1], hm2)
     save(output_file, fig2)
-    return
+    return nothing
 end
 
 # encoder = load("logs/test_new_inferopt_normalized_16/model_10000.jld2")["data"]
-encoder = Chain(Dense(20 => 1, bias=false), vec)
+encoder = Chain(Dense(20 => 1; bias=false), vec)
 
 best = load("final_experiments/imitation_50tasks50scenarios/model_50.jld2")
 encoder = best["data"]
@@ -57,8 +64,8 @@ _, ypred = solve_deterministic_VSP(x; include_delays=true)
 ypred1 = Solution(easy_problem(encoder(x.features); instance=x), x);
 ypred2 = Solution(easy_problem(encoder2(x.features); instance=x), x);
 
-nb_tasks = length(x.city.tasks)-2
-start_times = [task.start_time for task in x.city.tasks[2:end-1]]
+nb_tasks = length(x.city.tasks) - 2
+start_times = [task.start_time for task in x.city.tasks[2:(end - 1)]]
 vehiclesgt = [argmax(y.path_value[:, i]) for i in 1:nb_tasks]
 visualize_solution(x, y, start_times, vehiclesgt)
 visualize_solution(x, ypred, start_times, vehiclesgt)
@@ -68,8 +75,8 @@ visualize_solution(x, ypred2, start_times, vehiclesgt)
 evaluate_solution(ypred2, x)
 evaluate_solution(y, x)
 
-9000 + 2*sum(evaluate_solution2(ypred2, x))
-9000 + 2*sum(evaluate_solution2(y, x))
+9000 + 2 * sum(evaluate_solution2(ypred2, x))
+9000 + 2 * sum(evaluate_solution2(y, x))
 
 StochasticVehicleScheduling.get_nb_vehicles(y)
 StochasticVehicleScheduling.get_nb_vehicles(ypred2)

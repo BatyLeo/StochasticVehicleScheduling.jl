@@ -39,12 +39,14 @@ target_mapping_2 = [
 files = readdir(results_dir)
 
 # ! hardcoded
-function gap_table(model_mapping, target_mapping; output_file="table.tex", caption="Cost gap")
+function gap_table(
+    model_mapping, target_mapping; output_file="table.tex", caption="Cost gap"
+)
     table = open(output_file, "w")
     # write header
     write(table, "\\begin{table}[H]\n")
     write(table, "\\centering\n")
-    nb_col = length(target_mapping)*2
+    nb_col = length(target_mapping) * 2
     write(table, "\\begin{tabular}{|c|$("c"^nb_col)|}\n\\hline\n")
     header = "\\multirow{3}{*}{\\textbf{Train dataset}} & \\multicolumn{$nb_col}{c|}{\\textbf{Test dataset}} \\\\ \\cline{2-$(nb_col+1)}\n"
     for (_, column_name) in values(target_mapping)
@@ -76,10 +78,12 @@ function gap_table(model_mapping, target_mapping; output_file="table.tex", capti
     write(table, "\\end{tabular}\n")
     write(table, "\\caption{$caption}\n")
     write(table, "\\end{table}\n")
-    close(table)
+    return close(table)
 end
 
-function task_cost_table(model_mapping, target_mapping; output_file="table.tex", caption="Average cost per task")
+function task_cost_table(
+    model_mapping, target_mapping; output_file="table.tex", caption="Average cost per task"
+)
     metric_name = "average_cost_per_task"
     table = open(output_file, "w")
     # write header
@@ -111,7 +115,7 @@ function task_cost_table(model_mapping, target_mapping; output_file="table.tex",
     write(table, "\\end{tabular}\n")
     write(table, "\\caption{$caption}\n")
     write(table, "\\end{table}\n")
-    close(table)
+    return close(table)
 end
 
 task_cost_table(imitation_model_mapping, target_mapping_2)

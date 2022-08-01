@@ -6,4 +6,4 @@ dataset_path = tempname()
 save_dataset(X, Y, dataset_path)
 loaded_dataset = load_dataset(dataset_path)
 
-@test 1. == 1.
+@test 1.0 == 1.0

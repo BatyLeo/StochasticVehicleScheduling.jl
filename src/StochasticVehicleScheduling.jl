@@ -25,7 +25,7 @@ using TensorBoardLogger
 using YAML
 
 function __init__()
-    @require Gurobi="2e9cd046-0924-5485-92f1-d5272153d98b" include("gurobi_stuff.jl")
+    @require Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b" include("gurobi_stuff.jl")
 end
 
 include("utils/utils.jl")
@@ -68,11 +68,12 @@ export column_generation, compute_solution_from_selected_columns
 export solve_scenarios
 
 # Dataset
-export generate_dataset, save_dataset, load_dataset, normalize_data!, compute_μ_σ, reduce_data!
+export generate_dataset,
+    save_dataset, load_dataset, normalize_data!, compute_μ_σ, reduce_data!
 
 # Training
 dropfirstdim(z::AbstractArray) = dropdims(z; dims=1)
-make_negative(z::AbstractArray; threshold=0.) = -exp.(z) - threshold
+make_negative(z::AbstractArray; threshold=0.0) = -exp.(z) - threshold
 
 export mape, normalized_mape
 export hamming_distance, normalized_hamming_distance

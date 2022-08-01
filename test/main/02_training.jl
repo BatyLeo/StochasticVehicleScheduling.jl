@@ -11,9 +11,9 @@ function main_imitation()
         # "25tasks10scenarios_garbage.yaml",
     ]
     for file in files
-        Random.seed!(67);
+        Random.seed!(67)
         config_file = "test/main/configs/imitation/$file"
-        trainer = Trainer(config_file);
+        trainer = Trainer(config_file)
         train_loop!(trainer)
     end
 end
@@ -26,9 +26,9 @@ function main_experience()
         "100tasks50scenarios.yaml",
     ]
     for file in files
-        Random.seed!(67);
+        Random.seed!(67)
         config_file = "test/main/configs/experience/$file"
-        trainer = Trainer(config_file);
+        trainer = Trainer(config_file)
         train_loop!(trainer)
     end
 end

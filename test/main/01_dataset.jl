@@ -28,19 +28,15 @@ datasets = [
 ];
 
 for setting in ["test"]
-    X = Instance[];
+    X = Instance[]
     # Y = Solution[];
     for dataset in datasets
         data = load(joinpath("data", dataset, "$setting.jld2"))
-        X = cat(X, data["X"][1:5], dims=1)
+        X = cat(X, data["X"][1:5]; dims=1)
         #Y = cat(Y, data["Y"][1:5], dims=1)
     end
     config = Dict(
-        "nb_samples" => Dict(
-            "train" => 0,
-            "validation" => 0,
-            "test" => 50,
-        ),
+        "nb_samples" => Dict("train" => 0, "validation" => 0, "test" => 50),
         "labeled" => false,
         "heuristic" => false,
         "city_kwargs" => "mixed",
@@ -48,7 +44,7 @@ for setting in ["test"]
     )
     save_config(config, joinpath("data", "mixed", "info.yaml"))
     slice = shuffle(1:length(X))
-    jldsave(joinpath("data", "mixed", "$setting.jld2"), X=X[slice])#, Y=Y[slice])
+    jldsave(joinpath("data", "mixed", "$setting.jld2"); X=X[slice])#, Y=Y[slice])
 end
 
 # ---

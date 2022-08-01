@@ -2,13 +2,13 @@ function solve_scenarios(instance::Instance; model_builder=cbc_model)
     (; graph, slacks, delays, city) = instance
     (; delay_cost, vehicle_cost) = city
     nb_nodes = nv(graph)
-    job_indices = 2:nb_nodes-1
+    job_indices = 2:(nb_nodes - 1)
     nodes = 1:nb_nodes
 
     # Pre-processing
     ε = delays
     #Rmax = maximum(ε, dims=1)
-    Rmax = maximum(sum(ε, dims=1))
+    Rmax = maximum(sum(ε; dims=1))
     nb_scenarios = size(ε, 2)
     Ω = 1:nb_scenarios
 
@@ -24,7 +24,8 @@ function solve_scenarios(instance::Instance; model_builder=cbc_model)
         model,
         Min,
         delay_cost * sum(sum(R[v, ω] for v in job_indices) for ω in Ω) / nb_scenarios # average total delay
-            + vehicle_cost * sum(y[1, v] for v in job_indices) # nb_vehicles
+            +
+            vehicle_cost * sum(y[1, v] for v in job_indices) # nb_vehicles
     )
 
     # Flow contraints
@@ -32,7 +33,7 @@ function solve_scenarios(instance::Instance; model_builder=cbc_model)
         model,
         flow[i in job_indices],
         sum(y[j, i] for j in inneighbors(graph, i)) ==
-        sum(y[i, j] for j in outneighbors(graph, i))
+            sum(y[i, j] for j in outneighbors(graph, i))
     )
     @constraint(
         model,
@@ -46,7 +47,10 @@ function solve_scenarios(instance::Instance; model_builder=cbc_model)
     @constraint(
         model,
         R_delay_2[v in job_indices, ω in Ω],
-        R[v, ω] >= ε[v, ω] + sum(yR[u, v, ω] - y[u, v] * slacks[u, v][ω] for u in nodes if has_edge(graph, u, v))
+        R[v, ω] >=
+            ε[v, ω] + sum(
+            yR[u, v, ω] - y[u, v] * slacks[u, v][ω] for u in nodes if has_edge(graph, u, v)
+        )
     )
 
     # Mc Cormick linearization constraints
@@ -64,7 +68,6 @@ function solve_scenarios(instance::Instance; model_builder=cbc_model)
     # Solve model
     optimize!(model)
     solution = value.(y)
-
 
     # sol = falses(ne(graph))
     # for (i, edge) in enumerate(edges(graph))
