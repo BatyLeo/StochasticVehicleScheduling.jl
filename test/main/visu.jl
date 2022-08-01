@@ -15,8 +15,9 @@ function visualize_solution(x, y, start_times, vehiclesgt; output_file="groundtr
     )
     groundtruth = evaluate_solution2(y, x)
     position = [(i, j) for (i, j) in zip(start_times, vehiclesgt)]
-    fig2, axis, hm2 = scatter(position;
-        color=groundtruth, markersize=groundtruth, axis=axis2, colormap=:thermal);
+    fig2, _, hm2 = scatter(
+        position; color=groundtruth, markersize=groundtruth, axis=axis2, colormap=:thermal
+    )
     for v in 1:size(y.path_value, 1)
         xs = Float64[]
         ys = Int[]
@@ -29,15 +30,21 @@ function visualize_solution(x, y, start_times, vehiclesgt; output_file="groundtr
         if length(xs) == 0
             break
         end
-        for i in 1:length(xs)-1
-            arrows!([xs[i]], [ys[i]], [xs[i+1] - xs[i]], [ys[i+1] - ys[i]];
-                arrowsize=15, lengthscale=1.0)
+        for i in 1:(length(xs) - 1)
+            arrows!(
+                [xs[i]],
+                [ys[i]],
+                [xs[i + 1] - xs[i]],
+                [ys[i + 1] - ys[i]];
+                arrowsize=15,
+                lengthscale=1.0,
+            )
         end
         #lines!(xs, ys, color=:black)
     end
     Colorbar(fig2[:, end+1], hm2, ticks = 0:5:60);
     save(output_file, fig2)
-    return
+    return nothing
 end
 
 # encoder = load("logs/test_new_inferopt_normalized_16/model_10000.jld2")["data"]
@@ -78,8 +85,8 @@ main(42)
 evaluate_solution(ypred2, x)
 evaluate_solution(y, x)
 
-9000 + 2*sum(evaluate_solution2(ypred2, x))
-9000 + 2*sum(evaluate_solution2(y, x))
+9000 + 2 * sum(evaluate_solution2(ypred2, x))
+9000 + 2 * sum(evaluate_solution2(y, x))
 
 StochasticVehicleScheduling.get_nb_vehicles(y)
 StochasticVehicleScheduling.get_nb_vehicles(ypred2)

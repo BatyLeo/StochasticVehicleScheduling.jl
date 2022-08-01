@@ -14,7 +14,7 @@ struct Solution
 end
 
 function get_nb_vehicles(path_value::BitMatrix)
-    return sum(any(path_value, dims=2))
+    return sum(any(path_value; dims=2))
 end
 
 function get_nb_vehicles(solution::Solution)
@@ -27,7 +27,7 @@ function get_routes(solution::Solution)
         resv = Int[]
         for (index, value) in enumerate(solution.path_value[vehicle, :])
             if value
-                push!(resv, index+1)
+                push!(resv, index + 1)
             end
         end
         push!(res, resv)
@@ -83,16 +83,17 @@ end
 
 function path_solution_from_JuMP_array(x::AbstractArray, graph::AbstractGraph)
     nb_tasks = nv(graph)
-    sol = falses(nb_tasks-2, nb_tasks-2) # init
-    job_indices = 2:nb_tasks-1
+    sol = falses(nb_tasks - 2, nb_tasks - 2) # init
+    job_indices = 2:(nb_tasks - 1)
 
     start = [i for i in job_indices if x[1, i] ≈ 1]
     for (v_index, task) in enumerate(start)
         current_task = task
         while current_task < nb_tasks
-            sol[v_index, current_task-1] = true
+            sol[v_index, current_task - 1] = true
             next_tasks = [
-                i for i in outneighbors(graph, current_task) if isapprox(x[current_task, i], 1; atol=0.1)
+                i for i in outneighbors(graph, current_task) if
+                isapprox(x[current_task, i], 1; atol=0.1)
             ]
             # TODO : there is a more efficient way to search for next task (but more dangerous)
             if length(next_tasks) == 1
@@ -168,13 +169,9 @@ function evaluate_scenario(path_value::BitMatrix, instance::Instance, scenario_i
                 continue
             end
             task_delay = evaluate_task(
-                i_task+1,
-                instance,
-                old_task_index,
-                task_delay,
-                scenario_index,
+                i_task + 1, instance, old_task_index, task_delay, scenario_index
             )
-            old_task_index = i_task+1
+            old_task_index = i_task + 1
 
             total_delay += task_delay
         end
@@ -203,13 +200,9 @@ function evaluate_scenario2(path_value::BitMatrix, instance::Instance, scenario_
                 continue
             end
             task_delay = evaluate_task(
-                i_task+1,
-                instance,
-                old_task_index,
-                task_delay,
-                scenario_index,
+                i_task + 1, instance, old_task_index, task_delay, scenario_index
             )
-            old_task_index = i_task+1
+            old_task_index = i_task + 1
 
             total_delay += task_delay
             task_delays[i_task] = task_delay
@@ -244,8 +237,9 @@ function evaluate_solution(path_value::BitMatrix, instance::Instance)
     end
     average_delay /= nb_scenarios
 
-    nb_vehicles = sum(any(path_value, dims=2))
-    return instance.city.vehicle_cost * nb_vehicles + instance.city.delay_cost * average_delay
+    nb_vehicles = sum(any(path_value; dims=2))
+    return instance.city.vehicle_cost * nb_vehicles +
+           instance.city.delay_cost * average_delay
 end
 
 function evaluate_solution(solution::Solution, instance::Instance)
@@ -271,8 +265,8 @@ end
 function to_array(path_value::BitMatrix, instance::Instance)
     graph = instance.graph
     nb_nodes = nv(graph)
-    nb_tasks = nb_nodes-2
-    job_indices = 2:nb_nodes-1
+    nb_tasks = nb_nodes - 2
+    job_indices = 2:(nb_nodes - 1)
     mat = falses(nb_nodes, nb_nodes)
 
     # check each task used once and only once
@@ -315,8 +309,8 @@ end
 function is_admissible(solution::Solution, instance::Instance)
     graph = instance.graph
     nb_nodes = nv(graph)
-    nb_tasks = nb_nodes-2
-    job_indices = 2:nb_nodes-1
+    nb_tasks = nb_nodes - 2
+    job_indices = 2:(nb_nodes - 1)
     mat = falses(nb_nodes, nb_nodes)
 
     # check each task used once and only once
@@ -343,7 +337,7 @@ function is_admissible(solution::Solution, instance::Instance)
         end
     end
 
-    if !all(sum(solution.path_value, dims=1) .== 1)
+    if !all(sum(solution.path_value; dims=1) .== 1)
         @warn "One task done by more than one vehicle"
         return false
     end
@@ -351,7 +345,7 @@ function is_admissible(solution::Solution, instance::Instance)
     for i in job_indices
         s1 = sum(mat[j, i] for j in inneighbors(graph, i))
         s2 = sum(mat[i, j] for j in outneighbors(graph, i))
-        if  s1 != s2 || s1 != 1
+        if s1 != s2 || s1 != 1
             @warn "Flow is broken" i s1 s2
             @warn "" inneighbors(graph, i)
             @warn "" [mat[j, i] for j in inneighbors(graph, i)]
@@ -373,10 +367,10 @@ function compute_path_list(solution::Solution)
         path = [1]
         for (i, elem) in enumerate(path_value[v, :])
             if elem == 1
-                push!(path, i+1)
+                push!(path, i + 1)
             end
         end
-        push!(path, size(path_value, 2)+2)
+        push!(path, size(path_value, 2) + 2)
         push!(paths, path)
     end
     return paths

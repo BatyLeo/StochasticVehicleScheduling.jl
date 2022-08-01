@@ -1,8 +1,12 @@
-using StochasticVehicleScheduling
+using Aqua
+using Cbc
+using JuliaFormatter
 using Random
+using StochasticVehicleScheduling
 using Test
 using UnicodePlots
-using Cbc
+
+format(StochasticVehicleScheduling; verbose=true)
 
 # const GRB_ENV = Gurobi.Env()
 
@@ -23,7 +27,11 @@ function short(solution::Solution)
     return "$(length(res)), $res"
 end
 
-@testset verbose=true "StochasticVehicleScheduling.jl" begin
+@testset verbose = true "StochasticVehicleScheduling.jl" begin
+    @testset verbose = true "Code quality (Aqua.jl)" begin
+        Aqua.test_all(StochasticVehicleScheduling; deps_compat=true, project_extras=true, ambiguities=false)
+    end
+
     @testset "Miscellaneous" begin
         # include("miscellaneous.jl")
         include("mini_example.jl")

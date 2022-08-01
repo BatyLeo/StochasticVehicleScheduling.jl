@@ -22,12 +22,17 @@ val_cost_opt = [cost(y; instance=x) for (x, y) in zip(X_val, Y_val)];
 function evaluate(w)
     final_encoder = Chain(Dense(reshape(w, 1, nb_features)), vec)
 
-    train_cost = [evaluate_solution(easy_problem(final_encoder(x.features); instance=x), x) for x in X];
+    train_cost = [
+        evaluate_solution(easy_problem(final_encoder(x.features); instance=x), x) for x in X
+    ]
     train_cost_gap = mean(
         (c - c_opt) / abs(c_opt) for (c, c_opt) in zip(train_cost, train_cost_opt)
     )
 
-    val_cost = [evaluate_solution(easy_problem(final_encoder(x.features); instance=x), x) for x in X_val];
+    val_cost = [
+        evaluate_solution(easy_problem(final_encoder(x.features); instance=x), x) for
+        x in X_val
+    ]
     val_cost_gap = mean(
         (c - c_opt) / abs(c_opt) for (c, c_opt) in zip(val_cost, val_cost_opt)
     )
@@ -37,10 +42,10 @@ end
 
 #optimal_value = mean(evaluate_solution(y, x) for (x, y) in zip(X, Y))
 
-maximizer(θ::AbstractVector; instance) = easy_problem(
-    θ; instance, model_builder=grb_model
+maximizer(θ::AbstractVector; instance) = easy_problem(θ; instance, model_builder=grb_model)
+loss = ProbabilisticComposition(
+    PerturbedAdditive(maximizer; ε=100, nb_samples=5, seed=0), cost
 )
-loss = ProbabilisticComposition(PerturbedAdditive(maximizer; ε=100, nb_samples=5, seed=0), cost)
 
 nb_features = 20
 function bbloss(W::Vector)
@@ -57,7 +62,7 @@ w_opt = Optim.minimizer(optimize(bbloss, randn(nb_features), BFGS()))
 ## Direct
 function direct_blackbox_loss(W::Vector)
     encoder = Chain(Dense(reshape(W, 1, nb_features)), vec)
-    θs = [encoder(x.features) for x  in X]
+    θs = [encoder(x.features) for x in X]
     ys = [easy_problem(θ; instance=x) for (x, θ) in zip(X, θs)]
     return mean(evaluate_solution(y, x) for (x, y) in zip(X, ys))
 end

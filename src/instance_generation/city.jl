@@ -42,7 +42,7 @@ function City(;
     districts=Matrix{District}(undef, width ÷ district_width, width ÷ district_width),
     delay_cost=default_delay_cost,
     random_inter_area_factor=default_random_inter_area_factor,
-    scenario_inter_area_factor=zeros(nb_scenarios, 24)
+    scenario_inter_area_factor=zeros(nb_scenarios, 24),
 )
     return City(
         width,
@@ -85,7 +85,7 @@ function create_random_city(;
     district_σ=default_district_σ,
     task_μ=default_task_μ,
     task_σ=default_task_σ,
-    city_kwargs...
+    city_kwargs...,
 )
     city = City(; city_kwargs...)
     init_districts(city, district_μ, district_σ)
@@ -102,7 +102,9 @@ function init_districts(city::City, district_μ::Distribution, district_σ::Dist
         for y in 1:nb_district_per_edge
             μ = rand(district_μ)
             σ = rand(district_σ)
-            city.districts[x, y] = District(random_delay=LogNormal(μ, σ), nb_scenarios=nb_scenarios)
+            city.districts[x, y] = District(;
+                random_delay=LogNormal(μ, σ), nb_scenarios=nb_scenarios
+            )
         end
     end
     return nothing
@@ -123,7 +125,7 @@ function init_tasks(
     start_time_distribution = Uniform(first_begin_time, last_begin_time)
     travel_time_multiplier_distribution = Uniform(αᵥ_low, αᵥ_high)
 
-    for i_task in 1:city.nb_tasks
+    for i_task in 1:(city.nb_tasks)
         start_point = draw_random_point(point_distribution)
         end_point = draw_random_point(point_distribution)
 
@@ -136,7 +138,7 @@ function init_tasks(
         σ = rand(task_σ)
         random_delay = LogNormal(μ, σ)
 
-        city.tasks[i_task+1] = Task(
+        city.tasks[i_task + 1] = Task(;
             type=job::TaskType,
             start_point=start_point,
             end_point=end_point,
@@ -149,7 +151,7 @@ function init_tasks(
 
     # add start and final "artificial" tasks
     city_center = Point(city.width / 2, city.width / 2)  # ? hard coded ?
-    city.tasks[1] = Task(
+    city.tasks[1] = Task(;
         type=depot_start::TaskType,
         start_point=city_center,
         end_point=city_center,
@@ -159,7 +161,7 @@ function init_tasks(
         nb_scenarios=nb_scenarios,
     )
     final_task_time = 24 * 60.0 # ? hard coded ?
-    city.tasks[end] = Task(
+    city.tasks[end] = Task(;
         type=depot_end::TaskType,
         start_point=city_center,
         end_point=city_center,
@@ -170,7 +172,7 @@ function init_tasks(
     )
 
     # sort tasks by start time
-    sort!(city.tasks, by=task -> task.start_time, rev=false)
+    sort!(city.tasks; by=task -> task.start_time, rev=false)
     return nothing
 end
 
@@ -210,7 +212,7 @@ end
 function compute_perturbed_end_times!(city::City)
     nb_scenarios = size(city.scenario_inter_area_factor, 1)
 
-    for task in city.tasks[2:end-1]
+    for task in city.tasks[2:(end - 1)]
         start_time = task.start_time
         end_time = task.end_time
         start_point = task.start_point
@@ -236,7 +238,9 @@ function compute_perturbed_end_times!(city::City)
     return nothing
 end
 
-function get_perturbed_travel_time(city::City, old_task_index::Int, new_task_index::Int, scenario::Int)
+function get_perturbed_travel_time(
+    city::City, old_task_index::Int, new_task_index::Int, scenario::Int
+)
     old_task = city.tasks[old_task_index]
     new_task = city.tasks[new_task_index]
 
@@ -245,9 +249,13 @@ function get_perturbed_travel_time(city::City, old_task_index::Int, new_task_ind
 
     ξ₁ = old_task.scenario_end_time[scenario]
     ξ₂ = ξ₁ + city.districts[origin_x, origin_y].scenario_delay[scenario, hour_of(ξ₁)]
-    ξ₃ = ξ₂ + distance(old_task.end_point, new_task.start_point,) +
-         city.scenario_inter_area_factor[scenario, hour_of(ξ₂)]
-    return ξ₃ + city.districts[destination_x, destination_y].scenario_delay[scenario, hour_of(ξ₃)] - ξ₁
+    ξ₃ =
+        ξ₂ +
+        distance(old_task.end_point, new_task.start_point) +
+        city.scenario_inter_area_factor[scenario, hour_of(ξ₂)]
+    return ξ₃ + city.districts[destination_x, destination_y].scenario_delay[
+        scenario, hour_of(ξ₃)
+    ] - ξ₁
 end
 
 """
@@ -264,7 +272,7 @@ function create_VSP_graph(city::City)
     graph = SimpleDiGraph(nb_vertices)
     starting_task = 1
     end_task = nb_vertices
-    job_tasks = 2:(city.nb_tasks+1)
+    job_tasks = 2:(city.nb_tasks + 1)
 
     travel_times = [
         distance(task1.end_point, task2.start_point) for task1 in city.tasks,
@@ -277,7 +285,7 @@ function create_VSP_graph(city::City)
         add_edge!(graph, starting_task, iorigin)
         add_edge!(graph, iorigin, end_task)
 
-        for idestination in (iorigin+1):(city.nb_tasks+1)
+        for idestination in (iorigin + 1):(city.nb_tasks + 1)
             travel_time = travel_times[iorigin, idestination]
             origin_end_time = city.tasks[iorigin].end_time
             destination_begin_time = city.tasks[idestination].start_time # get_prop(graph, idestination, :task).start_time
@@ -333,16 +341,20 @@ function compute_features(city::City)
 
     for (i, edge) in enumerate(edges(graph))
         # compute travel time
-        features[travel_time_index, i] = distance(city.tasks[src(edge)].end_point, city.tasks[dst(edge)].start_point)
+        features[travel_time_index, i] = distance(
+            city.tasks[src(edge)].end_point, city.tasks[dst(edge)].start_point
+        )
         # if edge connected to source node
-        features[connected_to_source_index, i] = src(edge) == 1 ? city.vehicle_cost : 0.
+        features[connected_to_source_index, i] = src(edge) == 1 ? city.vehicle_cost : 0.0
 
         # slack related features
         slacks = compute_slacks(city, src(edge), dst(edge))
         # compute deciles
         features[slack_deciles_indices, i] = quantile(slacks, [0.1 * i for i in 1:9])
         # compute cumulative distribution
-        features[slack_cumulative_distribution_indices, i] = [mean(slacks .<= x) for x in cumul]
+        features[slack_cumulative_distribution_indices, i] = [
+            mean(slacks .<= x) for x in cumul
+        ]
     end
     #
     # features[1] += features[2]
@@ -360,9 +372,11 @@ function compute_slacks(city::City, graph::AbstractGraph)
     (; tasks) = city
     N = nv(graph)
     slack_list = [
-        [(dst(e) < N ? tasks[dst(e)].scenario_start_time[ω] : Inf) -
+        [
+            (dst(e) < N ? tasks[dst(e)].scenario_start_time[ω] : Inf) -
             (tasks[src(e)].end_time + get_perturbed_travel_time(city, src(e), dst(e), ω))
-            for ω in 1:get_nb_scenarios(city)] for e in edges(graph)
+            for ω in 1:get_nb_scenarios(city)
+        ] for e in edges(graph)
     ]
     I = [src(e) for e in edges(graph)]
     J = [dst(e) for e in edges(graph)]

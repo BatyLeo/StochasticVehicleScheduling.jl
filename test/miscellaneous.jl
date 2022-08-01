@@ -1,7 +1,7 @@
 function experiment(seed::Int)
     Random.seed!(seed)
 
-    X_train, Y_train = generate_dataset(1; nb_tasks=20, nb_scenarios=1, nb_it=10_000);
+    X_train, Y_train = generate_dataset(1; nb_tasks=20, nb_scenarios=1, nb_it=10_000)
     x, y = X_train[1], Y_train[1]
 
     heuristic_value = evaluate_solution(y, x)

@@ -18,10 +18,10 @@ function move_one_random_task!(path_value::BitMatrix, graph::AbstractGraph)
         # else
         is_empty = false
         if selected_task > 1
-            before = @view path_value[i, 1:selected_task-1]
+            before = @view path_value[i, 1:(selected_task - 1)]
             if any(before)
                 precedent_task = selected_task - find_first_one(reverse(before))
-                if !has_edge(graph, precedent_task+1, selected_task+1)
+                if !has_edge(graph, precedent_task + 1, selected_task + 1)
                     continue
                 end
             elseif empty_encountered
@@ -32,10 +32,12 @@ function move_one_random_task!(path_value::BitMatrix, graph::AbstractGraph)
         end
 
         if selected_task < nb_tasks
-            after = @view path_value[i, selected_task+1:end]
+            after = @view path_value[i, (selected_task + 1):end]
             if any(after)
-                next_task = selected_task + find_first_one(@view path_value[i, selected_task+1:end])
-                if !has_edge(graph, selected_task+1, next_task+1)
+                next_task =
+                    selected_task +
+                    find_first_one(@view path_value[i, (selected_task + 1):end])
+                if !has_edge(graph, selected_task + 1, next_task + 1)
                     continue
                 end
             elseif empty_encountered
