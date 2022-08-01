@@ -4,7 +4,7 @@ abstract type AbstractDataset end
 
 loader(d::AbstractDataset) = d.loader
 
-struct SupervisedDataset{Dx, Dy, L} <: AbstractDataset
+struct SupervisedDataset{Dx,Dy,L} <: AbstractDataset
     X::Dx
     Y::Dy
     loader::L
@@ -22,14 +22,14 @@ function build_loader(dataset::SupervisedDataset, batchsize)
     return Flux.DataLoader((dataset.X, dataset.Y); batchsize=batchsize)
 end
 
-struct ExperienceDataset{Dx, Dy, L} <: AbstractDataset
+struct ExperienceDataset{Dx,Dy,L} <: AbstractDataset
     X::Dx
     Y::Dy
     loader::L
 end
 
 function ExperienceDataset(X, Y)
-    return ExperienceDataset(X, Y, Flux.DataLoader((X, ); batchsize=1))
+    return ExperienceDataset(X, Y, Flux.DataLoader((X,); batchsize=1))
 end
 
 function loss_data(dataset::ExperienceDataset)
@@ -37,5 +37,5 @@ function loss_data(dataset::ExperienceDataset)
 end
 
 function build_loader(dataset::ExperienceDataset, batchsize)
-    return Flux.DataLoader((dataset.X, ); batchsize=batchsize)
+    return Flux.DataLoader((dataset.X,); batchsize=batchsize)
 end

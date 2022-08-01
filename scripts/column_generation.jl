@@ -30,9 +30,7 @@ using Graphs
 # f()
 
 Random.seed!(1)
-instance = Instance(create_random_city(
-    nb_tasks=50, nb_scenarios=1
-));
+instance = Instance(create_random_city(; nb_tasks=50, nb_scenarios=1));
 
 @time solve_scenarios(instance; model_builder=grb_model)
 

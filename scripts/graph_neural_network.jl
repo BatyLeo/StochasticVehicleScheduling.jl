@@ -20,7 +20,7 @@ nv(fg), ne(fg)
 edge_feature(fg)
 node_feature(fg)
 
-gc = GCNConv(nb_features=>20)
+gc = GCNConv(nb_features => 20)
 
 fg2 = gc(fg)
 node_feature(fg2)
@@ -36,7 +36,7 @@ node_feature(fg2)
 # nv(fg), ne(fg)
 # edge_feature(fg)
 # node_feature(fg)
-gc2 = GraphParallel(node_layer=Dense(20, nb_vertices))
+gc2 = GraphParallel(; node_layer=Dense(20, nb_vertices))
 
 res = gc2(gc(fg))
 node_feature(res)
@@ -49,7 +49,5 @@ end
 build_θ(res)
 
 GNN = Chain(
-    GCNConv(nb_features=>20),
-    GraphParallel(node_layer=Dense(20, nb_vertices)),
-    build_θ
+    GCNConv(nb_features => 20), GraphParallel(; node_layer=Dense(20, nb_vertices)), build_θ
 )

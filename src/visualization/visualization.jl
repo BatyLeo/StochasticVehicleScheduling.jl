@@ -5,7 +5,7 @@ function plot_instance(instance::Instance)
     ax.xlabel = "x"
     ax.ylabel = "y"
     (; tasks, district_width, width) = city
-    for (i_task, task) in enumerate(tasks[1:end-1])
+    for (i_task, task) in enumerate(tasks[1:(end - 1)])
         (; start_point, end_point) = task
         points = [(start_point.x, start_point.y), (end_point.x, end_point.y)]
         scatter!(ax, points; markersize=40, marker=:rect)
@@ -15,8 +15,8 @@ function plot_instance(instance::Instance)
     ticks = 0:district_width:width
     ax.xticks = ticks
     ax.yticks = ticks
-    xlims!(ax, [-1, width+1])
-    ylims!(ax, [-1, width+1])
+    xlims!(ax, [-1, width + 1])
+    ylims!(ax, [-1, width + 1])
     return fig
 end
 
@@ -49,7 +49,7 @@ function plot_solution(solution::Solution, instance::Instance)
     ticks = 0:district_width:width
     ax.xticks = ticks
     ax.yticks = ticks
-    xlims!(ax, [-1, width+1])
-    ylims!(ax, [-1, width+1])
+    xlims!(ax, [-1, width + 1])
+    ylims!(ax, [-1, width + 1])
     return fig
 end

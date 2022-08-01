@@ -35,8 +35,16 @@ function Task(;
     nb_scenarios::Int,
     random_delay::LogNormal{Float64}=ZERO_UNIFORM,
 )
-    return Task(type, start_point, end_point, start_time, end_time,
-        random_delay, zeros(nb_scenarios) .+ start_time, zeros(nb_scenarios) .+ end_time)
+    return Task(
+        type,
+        start_point,
+        end_point,
+        start_time,
+        end_time,
+        random_delay,
+        zeros(nb_scenarios) .+ start_time,
+        zeros(nb_scenarios) .+ end_time,
+    )
 end
 
 """
@@ -56,15 +64,17 @@ function roll(task::Task)
     return nothing
 end
 
-Base.show(io::IO, task::Task) = @printf(
-    "(%.2f, %.2f) -> (%.2f, %.2f), [%.2f, %.2f], %s, %s, %s",
-    task.start_point.x,
-    task.start_point.y,
-    task.end_point.x,
-    task.end_point.y,
-    task.start_time,
-    task.end_time,
-    task.type,
-    task.scenario_start_time,
-    task.scenario_end_time,
-)
+function Base.show(io::IO, task::Task)
+    @printf(
+        "(%.2f, %.2f) -> (%.2f, %.2f), [%.2f, %.2f], %s, %s, %s",
+        task.start_point.x,
+        task.start_point.y,
+        task.end_point.x,
+        task.end_point.y,
+        task.start_time,
+        task.end_time,
+        task.type,
+        task.scenario_start_time,
+        task.scenario_end_time,
+    )
+end

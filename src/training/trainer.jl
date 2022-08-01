@@ -10,7 +10,7 @@ end
 
 function (pipeline::Pipeline)(x)
     (; encoder, maximizer) = pipeline
-    return maximizer(encoder(x.features), instance=x)
+    return maximizer(encoder(x.features); instance=x)
 end
 
 # ----------
@@ -37,7 +37,9 @@ end
 function Trainer(config_file; create_logger=true)#; model_builder)
     config = read_config(config_file)
     if create_logger
-        logger = TBLogger(joinpath(config.train.log_dir, config.train.tag), min_level=Logging.Info)
+        logger = TBLogger(
+            joinpath(config.train.log_dir, config.train.tag); min_level=Logging.Info
+        )
         save_config(config, joinpath(logger.logdir, "config.yaml"))
     else
         logger = nothing
@@ -49,7 +51,6 @@ function Trainer(config_file; create_logger=true)#; model_builder)
 
     # Load data and create dataset
     (; data_dir, train_file, validation_file) = config.data
-
 
     train_dir = joinpath(data_dir, train_file)
     dataset_train = load(train_dir)
@@ -71,12 +72,22 @@ function Trainer(config_file; create_logger=true)#; model_builder)
     data = (loader=loader, train=data_train, validation=data_val)
 
     # Metrics
-    metrics = [eval(Meta.parse(metric)) for metric in config.train.metrics.train_and_validation]
-    train_metric_list = isnothing(config.train.metrics.train) ? [] : [eval(Meta.parse(metric)) for metric in config.train.metrics.train]
-    val_metric_list = isnothing(config.train.metrics.validation) ? [] : [eval(Meta.parse(metric)) for metric in config.train.metrics.validation]
+    metrics = [
+        eval(Meta.parse(metric)) for metric in config.train.metrics.train_and_validation
+    ]
+    train_metric_list = if isnothing(config.train.metrics.train)
+        []
+    else
+        [eval(Meta.parse(metric)) for metric in config.train.metrics.train]
+    end
+    val_metric_list = if isnothing(config.train.metrics.validation)
+        []
+    else
+        [eval(Meta.parse(metric)) for metric in config.train.metrics.validation]
+    end
 
-    train_metrics = Tuple(metric() for metric in cat(metrics, train_metric_list, dims=1))
-    validation_metrics = Tuple(metric() for metric in cat(metrics, val_metric_list, dims=1))
+    train_metrics = Tuple(metric() for metric in cat(metrics, train_metric_list; dims=1))
+    validation_metrics = Tuple(metric() for metric in cat(metrics, val_metric_list; dims=1))
 
     # Optimizer
     (; name, args) = config.train.optimizer
@@ -112,7 +123,12 @@ function compute_metrics!(trainer::Trainer, epoch::Integer)
     Y_train_pred = [trainer.pipeline(x) for x in trainer.data.train.X]
     for (idx, metric) in enumerate(trainer.metrics.train)
         compute_value!(metric, trainer; train=true, Y_pred=Y_train_pred, epoch=epoch)
-        log_last_measure!(metric, trainer.logger; train=true, step_increment=(idx == 1 ? epoch - trainer.logger.global_step : 0))
+        log_last_measure!(
+            metric,
+            trainer.logger;
+            train=true,
+            step_increment=(idx == 1 ? epoch - trainer.logger.global_step : 0),
+        )
     end
 
     Y_val_pred = [trainer.pipeline(x) for x in trainer.data.validation.X]
@@ -125,8 +141,13 @@ end
 
 function save_model(trainer::Trainer, epoch::Integer; best=false)
     if best
-        jldsave("$(trainer.logger.logdir)/best.jld2", data=trainer.pipeline.encoder, epoch=epoch, σ=trainer.normalization_factor)
-        return
+        jldsave(
+            "$(trainer.logger.logdir)/best.jld2";
+            data=trainer.pipeline.encoder,
+            epoch=epoch,
+            σ=trainer.normalization_factor,
+        )
+        return nothing
     end
 
     # else
@@ -134,7 +155,11 @@ function save_model(trainer::Trainer, epoch::Integer; best=false)
         return nothing
     end
     # else
-    jldsave("$(trainer.logger.logdir)/model_$epoch.jld2", data=trainer.pipeline.encoder, σ=trainer.normalization_factor)
+    return jldsave(
+        "$(trainer.logger.logdir)/model_$epoch.jld2";
+        data=trainer.pipeline.encoder,
+        σ=trainer.normalization_factor,
+    )
 end
 
 function my_custom_train!(loss, ps, data, opt)
@@ -174,14 +199,16 @@ end
 
 # Specific constructors
 function FenchelYoungGLM(; nb_features, ε, M, model_builder::String)
-    encoder = Chain(Dense(nb_features => 1, bias=false), vec)
-    maximizer(θ::AbstractVector; instance) = easy_problem(
-        θ; instance, model_builder=eval(Meta.parse(model_builder))
-    )
+    encoder = Chain(Dense(nb_features => 1; bias=false), vec)
+    function maximizer(θ::AbstractVector; instance)
+        return easy_problem(θ; instance, model_builder=eval(Meta.parse(model_builder)))
+    end
     pipeline = Pipeline(encoder, maximizer)
 
     loss = FenchelYoungLoss(PerturbedAdditive(maximizer; ε=ε, nb_samples=M))
-    pipeline_loss(X, Y) = mean(loss(encoder(x.features), y.value; instance=x) for (x, y) in zip(X, Y))
+    function pipeline_loss(X, Y)
+        return mean(loss(encoder(x.features), y.value; instance=x) for (x, y) in zip(X, Y))
+    end
 
     cost(y; instance) = evaluate_solution(y, instance)
     return pipeline, pipeline_loss, cost, SupervisedDataset
@@ -194,30 +221,36 @@ end
 # end
 
 function PerturbedGLM(; nb_features, ε, M, model_builder::String, seed=nothing)
-    encoder = Chain(Dense(nb_features => 1, bias=false), vec)
-    maximizer(θ::AbstractVector; instance) = easy_problem(
-        θ; instance, model_builder=eval(Meta.parse(model_builder))
-    )
+    encoder = Chain(Dense(nb_features => 1; bias=false), vec)
+    function maximizer(θ::AbstractVector; instance)
+        return easy_problem(θ; instance, model_builder=eval(Meta.parse(model_builder)))
+    end
     pipeline = Pipeline(encoder, maximizer)
 
     cost(y; instance) = evaluate_solution(y, instance)
 
-    loss = ProbabilisticComposition(PerturbedAdditive(maximizer; ε=ε, nb_samples=M, seed=seed), cost)
+    loss = ProbabilisticComposition(
+        PerturbedAdditive(maximizer; ε=ε, nb_samples=M, seed=seed), cost
+    )
     pipeline_loss(X) = mean(loss(encoder(x.features); instance=x) for x in X)
 
     return pipeline, pipeline_loss, cost, ExperienceDataset
 end
 
-function PerturbedMultiplicativeGLM(; nb_features, ε, M, model_builder::String, seed=nothing)
-    encoder = Chain(Dense(nb_features => 1, bias=false), vec)
-    maximizer(θ::AbstractVector; instance) = easy_problem(
-        θ; instance, model_builder=eval(Meta.parse(model_builder))
-    )
+function PerturbedMultiplicativeGLM(;
+    nb_features, ε, M, model_builder::String, seed=nothing
+)
+    encoder = Chain(Dense(nb_features => 1; bias=false), vec)
+    function maximizer(θ::AbstractVector; instance)
+        return easy_problem(θ; instance, model_builder=eval(Meta.parse(model_builder)))
+    end
     pipeline = Pipeline(encoder, maximizer)
 
     cost(y; instance) = evaluate_solution(y, instance)
 
-    loss = ProbabilisticComposition(PerturbedMultiplicative(maximizer; ε=ε, nb_samples=M, seed=seed), cost)
+    loss = ProbabilisticComposition(
+        PerturbedMultiplicative(maximizer; ε=ε, nb_samples=M, seed=seed), cost
+    )
     pipeline_loss(X) = mean(loss(encoder(x.features); instance=x) for x in X)
 
     return pipeline, pipeline_loss, cost, ExperienceDataset
@@ -233,17 +266,19 @@ end
 function GNN_imitation(; nb_features, ε, M, model_builder::String)
     encoder = Chain(
         GCNConv(nb_features => 20),
-        GraphParallel(node_layer=Dense(20, nb_vertices)),
-        build_θ
+        GraphParallel(; node_layer=Dense(20, nb_vertices)),
+        build_θ,
     )
 
-    maximizer(θ::AbstractVector; instance) = easy_problem(
-        θ; instance, model_builder=eval(Meta.parse(model_builder))
-    )
+    function maximizer(θ::AbstractVector; instance)
+        return easy_problem(θ; instance, model_builder=eval(Meta.parse(model_builder)))
+    end
     pipeline = Pipeline(encoder, maximizer)
 
     loss = FenchelYoungLoss(PerturbedNormal(maximizer; ε, M))
-    pipeline_loss(X, Y) = mean(loss(encoder(x.features), y.value; instance=x) for (x, y) in zip(X, Y))
+    function pipeline_loss(X, Y)
+        return mean(loss(encoder(x.features), y.value; instance=x) for (x, y) in zip(X, Y))
+    end
 
     cost(y; instance) = evaluate_solution(y, instance)
     return pipeline, pipeline_loss, cost, SupervisedDataset

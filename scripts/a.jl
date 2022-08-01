@@ -16,7 +16,9 @@ encoder[1].weight ./= reshape(σ, 1, 20)
 Flux.params(encoder)[1]'
 
 θ_pred = [encoder(x.features) for x in X_test];
-Y_pred = [easy_problem(encoder(x.features); instance=x, model_builder=grb_model) for x in X_test];
+Y_pred = [
+    easy_problem(encoder(x.features); instance=x, model_builder=grb_model) for x in X_test
+];
 
 x, y_pred = X_test[1], Y_pred[1];
 

@@ -3,7 +3,7 @@ function delay_sum(path, slacks, delays)
     old_v = path[1]
     R = delays[old_v, :]
     C = 0.0
-    for v in path[2:end-1]
+    for v in path[2:(end - 1)]
         @. R = max(R - slacks[old_v, v], 0) + delays[v, :]
         C += sum(R) / nb_scenarios
         old_v = v
@@ -18,7 +18,7 @@ function column_generation(instance::Instance)
     delay_cost = city.delay_cost
 
     nb_nodes = nv(graph)
-    job_indices = 2:nb_nodes-1
+    job_indices = 2:(nb_nodes - 1)
 
     model = Model(GLPK.Optimizer)
 
@@ -30,8 +30,8 @@ function column_generation(instance::Instance)
     @constraint(
         model,
         con[p in initial_paths],
-        delay_cost * delay_sum(p, slacks, delays) + vehicle_cost
-            - sum(λ[v] for v in job_indices if v in p) >= 0
+        delay_cost * delay_sum(p, slacks, delays) + vehicle_cost -
+        sum(λ[v] for v in job_indices if v in p) >= 0
     )
     @constraint(model, λ[1] == 0)
     @constraint(model, λ[nb_nodes] == 0)
@@ -51,10 +51,12 @@ function column_generation(instance::Instance)
             break
         end
         push!(new_paths, p_star)
-        push!(cons, @constraint(
-            model,
-            path_cost - sum(λ[v] for v in job_indices if v in p_star) >= 0
-        ))
+        push!(
+            cons,
+            @constraint(
+                model, path_cost - sum(λ[v] for v in job_indices if v in p_star) >= 0
+            )
+        )
     end
 
     c_low = objective_value(model)
@@ -63,7 +65,9 @@ function column_generation(instance::Instance)
     @info paths[[y[p] for p in paths] .== 1.0]
 
     if c_upp ≈ c_low
-        return value.(λ), objective_value(model), cat(initial_paths, new_paths; dims=1), dual.(con), dual.(cons)
+        return value.(λ),
+        objective_value(model), cat(initial_paths, new_paths; dims=1), dual.(con),
+        dual.(cons)
     end
     # else
     threshold = (c_upp - c_low - vehicle_cost) / delay_cost
@@ -79,7 +83,11 @@ function column_generation(instance::Instance)
 
     # @info "Additional paths" additional_paths sort(costs)
 
-    return value.(λ), objective_value(model), unique(cat(initial_paths, new_paths, additional_paths; dims=1)), dual.(con), dual.(cons)
+    return value.(λ),
+    objective_value(model),
+    unique(cat(initial_paths, new_paths, additional_paths; dims=1)),
+    dual.(con),
+    dual.(cons)
 end
 
 function compute_solution_from_selected_columns(instance::Instance, paths; bin=true)
@@ -87,7 +95,7 @@ function compute_solution_from_selected_columns(instance::Instance, paths; bin=t
     (; vehicle_cost, delay_cost) = city
 
     nb_nodes = nv(graph)
-    job_indices = 2:nb_nodes-1
+    job_indices = 2:(nb_nodes - 1)
 
     model = Model(GLPK.Optimizer)
 
@@ -97,15 +105,15 @@ function compute_solution_from_selected_columns(instance::Instance, paths; bin=t
         @variable(model, y[p in paths] >= 0)
     end
 
-    @objective(model, Min,
-        sum((delay_cost * delay_sum(p, slacks, delays) + vehicle_cost) * y[p] for p in paths)
+    @objective(
+        model,
+        Min,
+        sum(
+            (delay_cost * delay_sum(p, slacks, delays) + vehicle_cost) * y[p] for p in paths
+        )
     )
 
-    @constraint(
-        model,
-        con[v in job_indices],
-        sum(y[p] for p in paths if v in p) == 1
-    )
+    @constraint(model, con[v in job_indices], sum(y[p] for p in paths if v in p) == 1)
 
     optimize!(model)
 
