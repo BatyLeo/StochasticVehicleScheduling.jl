@@ -4,7 +4,7 @@ Here we define the Stochastic vehicle scheduling problem and how to build an Inf
 
 ## Deterministic Vehicle Scheduling
 
-Vehicle Scheduling involves assigning vehicles to cover a set of scheduled tasks, while minimising the number of vehicles used and other costs.
+Vehicle Scheduling involves assigning vehicles to cover a set of scheduled tasks, while minimizing the number of vehicles used and other costs.
 ### Instance
 An instance of the problem is composed of:
 - A set of tasks ``v\in\bar V``:
@@ -22,7 +22,7 @@ We model an instance by the following acyclic Digraph ``D = (V, A)``:
     - ``(v, d)`` arc for all task ``v \in \bar V``
 - There is an arc between tasks ``u`` and ``v`` only if ``t_v^b \geq t_u^e + t_{(u, v)}^{tr}``
 
-A feasible vehicle tour is an ``o-d`` path ``P\in\mathcal P``. A feasible solution is a set of disjoint feasible vehicle tours fulfilling all tasks exctly once. This can be formulated as the following flow Linear Program:
+A feasible vehicle tour is a ``o-d`` path ``P\in\mathcal P``. A feasible solution is a set of disjoint feasible vehicle tours fulfilling all tasks exactly once. This can be formulated as the following flow Linear Program:
 ```math
 \boxed{\begin{aligned}
 \min & \, c_{\text{vehicle}}\sum_{a\in \delta^+(o)} y_a &\\
@@ -38,17 +38,17 @@ s.t. & \sum_{a\in \delta^-(v)} y_a = \sum_{a\in \delta^+(v)} y_a, & \forall v \i
 
 ## Stochastic Vehicle Scheduling
 
-Stochastic vehoicle scheduling is a variation of the deterministic version presented above, but scheduled task times can be perturbed by random events after the scheduling is fixed. The goal is now to also minimize the expectation of the detotal delay.
+Stochastic vehicle scheduling is a variation of the deterministic version presented above, but scheduled task times can be perturbed by random events after the scheduling is fixed. The goal is now to also minimize the expectation of the total delay.
 
-We consider the same framework as baove, to which we add the following:
+We consider the same framework as above, to which we add the following:
 - Delay cost: ``c_\text{delay}``
 - Set of scenarios ``\Omega``.
-- We indroduce three sets of random variables, wich can take different values depending on the scenario ``\omega\in\Omega``
+- We introduce three sets of random variables, which can take different values depending on the scenario ``\omega\in\Omega``
     - Perturbed beginning time: ``\xi_v^b \geq t_v^b``
     - Perturbed end time: ``\xi_v^e \geq t_v^e``
     - Perturbed travel time: ``\xi_{(u,v)}^{tr} \geq t_{(u,v)}^{tr}``
 - We fix ``\xi_o^e = 0`` and ``\xi_d^b = +\infty``
-- Given an ``o-uv`` path ``P``, we define recursively the end time ``\tau_v``, and the total delay ``\Delta_v`` along ``P``:
+- Given a ``o-uv`` path ``P``, we define recursively the end time ``\tau_v``, and the total delay ``\Delta_v`` along ``P``:
 ```math
 \boxed{\left\{\begin{aligned}
 \tau_v &= \xi_v^e + \max(\tau_u +\xi_{(u,v)}^{tr} - \xi_v^b, 0)\\
@@ -87,7 +87,7 @@ Cost of a path ``P``: ``c_P^\omega = c_{\text{vehicle}} + c_\text{delay}\times \
 \end{aligned}
 ```
 
-This formulation can be solved using a column generation algorithm. The associated subproblem is a constrained shortest path problem of the form :
+This formulation can be solved using a column generation algorithm. The associated sub-problem is a constrained shortest path problem of the form :
 ```math
 \min_{P\in\mathcal P} (c_P  - \sum_{v\in P}\lambda_v)
 ```

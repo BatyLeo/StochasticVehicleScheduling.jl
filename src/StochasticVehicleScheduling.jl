@@ -25,7 +25,7 @@ using YAML
 
 function __init__()
     @info "If you have Gurobi installed, you need to `using Gurobi` in order to setup it."
-    @require Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b" include("gurobi_stuff.jl")
+    @require Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b" include("gurobi_setup.jl")
 end
 
 include("utils/utils.jl")
@@ -67,7 +67,7 @@ export column_generation, compute_solution_from_selected_columns
 export solve_scenarios
 
 # Dataset
-export generate_dataset, normalize_data!, compute_μ_σ, reduce_data!
+export generate_dataset, normalize_data!, compute_μ_σ, reduce_data!, generate_samples
 
 # Training
 dropfirstdim(z::AbstractArray) = dropdims(z; dims=1)

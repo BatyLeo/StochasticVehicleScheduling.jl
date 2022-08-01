@@ -37,11 +37,11 @@ Let ``v`` be a task corresponding to a trip between district ``d_1`` and ``d_2``
 
 For an instance, the [`compute_features`](@ref StochasticVehicleScheduling.compute_features) function computes a matrix of 20 features for every arc of the corresponding graph :
 - Length of the arc in minutes (deterministic travel time)
-- Cost of a vehicle if the arc if connected to the source
+- Cost of a vehicle if the arc is connected to the source
 - The 9 deciles of the slack ``\xi_v^b - (\xi_u^e + \xi_a^{tr})``
 - The cumulative probability distribution of the slack, evaluated in ``[-100, -50,-20,-10,0,50,200,500]``
 
 ---
 ## Solutions
 
-We label each instance with [`heuristic_solution`](@ref StochasticVehicleScheduling.heuristic_solution), wich is a local search initialized with the solution of the deterministic problem (see [`solve_deterministic_VSP`](@ref StochasticVehicleScheduling.solve_deterministic_VSP))
+We label each instance with [`heuristic_solution`](@ref StochasticVehicleScheduling.heuristic_solution), which is a local search initialized with the solution of the deterministic problem (see [`solve_deterministic_VSP`](@ref StochasticVehicleScheduling.solve_deterministic_VSP))

@@ -59,6 +59,9 @@ function generate_samples(nb_samples::Integer; heuristic=true, labeled=true, cit
     return X, Y
 end
 
+"""
+    generate_dataset
+"""
 function generate_dataset(
     dataset_folder::String,
     nb_train_samples::Integer,
@@ -96,7 +99,7 @@ function generate_dataset(
     if nb_train_samples > 0
         train_slice = 1:nb_train_samples
         X_train = X[train_slice]
-        # ! compute statistics on TRAIN dataset
+        # ! we compute statistics on TRAIN dataset
         μ, σ, maxi = compute_μ_σ(X_train)
         config["μ_train"] = μ
         config["σ_train"] = σ

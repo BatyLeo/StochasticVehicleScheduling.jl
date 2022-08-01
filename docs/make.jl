@@ -1,6 +1,6 @@
-using StochasticVehicleScheduling
 using Documenter
 using Literate
+using StochasticVehicleScheduling
 
 DocMeta.setdocmeta!(
     StochasticVehicleScheduling,
@@ -9,7 +9,8 @@ DocMeta.setdocmeta!(
     recursive=true,
 )
 
-jl_file = joinpath(dirname(@__DIR__), "test", "tutorial.jl")
+literate_dir = joinpath(dirname(@__DIR__), "docs", "src", "literate")
+jl_file = joinpath(literate_dir, "tutorial.jl")
 md_dir = joinpath(@__DIR__, "src")
 Literate.markdown(jl_file, md_dir; documenter=true, execute=false)
 
@@ -23,7 +24,7 @@ makedocs(;
         canonical="https://BatyLeo.github.io/StochasticVehicleScheduling.jl",
         assets=String[],
     ),
-    pages=["Home" => "index.md", "math.md", "dataset.md", "main.md", "API" => "api.md"],
+    pages=["Home" => "index.md", "math.md", "dataset.md", "tutorial.md", "API" => "api.md"],
 )
 
 deploydocs(; repo="github.com/BatyLeo/StochasticVehicleScheduling.jl", devbranch="main")

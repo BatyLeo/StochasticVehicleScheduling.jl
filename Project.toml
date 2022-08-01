@@ -1,6 +1,6 @@
 name = "StochasticVehicleScheduling"
 uuid = "ab8c152f-a6a0-4b8c-a4a5-6213a740788c"
-authors = ["BatyLeo and contributors"]
+authors = ["Léo Baty and contributors"]
 version = "0.1.0"
 
 [deps]

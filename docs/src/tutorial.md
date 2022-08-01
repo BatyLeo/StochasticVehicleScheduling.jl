@@ -1,8 +1,10 @@
 ```@meta
-EditURL = "<unknown>/test/tutorial.jl"
+EditURL = "<unknown>/docs/src/literate/tutorial.jl"
 ```
 
 # End-to-end learning pipeline using `InferOpt`
+
+(Tutorial that doesn't use training wrappers provided by the package)
 
 Here is the end-to-end learning pipeline we will build (see [here](https://axelparmentier.github.io/InferOpt.jl/dev/math/#Structured-learning-pipeline) for more details):
 ```math
@@ -46,7 +48,7 @@ We create a dataset with 50 training and 50 test instances.
 Each instance has 20 tasks and 10 scenarios.
 
 ````@example tutorial
-nb_samples = 100
+nb_samples = 50
 split_ratio = 0.5
 nb_tasks = 20
 nb_scenarios = 10
@@ -55,11 +57,11 @@ function train_test_split(X::AbstractVector, Y::AbstractVector, split_ratio::Rea
     @assert length(X) == length(Y) "X and Y have different lengths"
     nb_training_samples = length(X) - trunc(Int, length(X) * split_ratio)
     X_train, Y_train = X[1:nb_training_samples], Y[1:nb_training_samples]
-    X_test, Y_test = X[nb_training_samples+1:end], Y[nb_training_samples+1:end]
+    X_test, Y_test = X[(nb_training_samples + 1):end], Y[(nb_training_samples + 1):end]
     return (X_train=X_train, Y_train=Y_train, X_test=X_test, Y_test=Y_test)
 end
 
-X, Y = generate_dataset(nb_samples; nb_tasks=nb_tasks, nb_scenarios=nb_scenarios, nb_it=10_000)
+X, Y = generate_samples(nb_samples; heuristic=true, labeled=true, city_kwargs=(; nb_tasks, nb_scenarios))
 X_train, Y_train, X_test, Y_test = train_test_split(X, Y, split_ratio)
 nb_features = size(X_train[1].features, 1)
 data_train, data_test = zip(X_train, Y_train), zip(X_test, Y_test);
@@ -73,12 +75,12 @@ nothing #hide
 Initialize the GLM predictor:
 
 ````@example tutorial
-model = Chain(Dense(nb_features => 1), vec)
+model = Chain(Dense(nb_features => 1, bias=false), vec)
 ````
 
 ````@example tutorial
 # Define the full pipeline
-pipeline(x) = easy_problem(model(x.features), instance=x);
+pipeline(x) = easy_problem(model(x.features); instance=x);
 nothing #hide
 ````
 
@@ -103,11 +105,13 @@ We choose a perturbed Fenchel-Young loss with parameters ``ε = 0.1`` and ``M = 
 # Loss function
 ε = 0.1
 M = 5
-maximizer(θ::AbstractVector; instance::Instance) = easy_problem(θ; instance=instance, model_builder=cbc_model)
-loss = FenchelYoungLoss(PerturbedNormal(maximizer; ε=ε, M=M))
+function maximizer(θ::AbstractVector; instance::Instance)
+    return easy_problem(θ; instance=instance, model_builder=cbc_model)
+end
+loss = FenchelYoungLoss(PerturbedAdditive(maximizer; ε=ε, nb_samples=M))
 flux_loss(x, y) = loss(model(x.features), y.value; instance=x)
 # Optimizer
-opt = ADAM();
+opt = Adam();
 nothing #hide
 ````
 
@@ -116,14 +120,16 @@ nothing #hide
 We train our model for 200 epochs
 
 ````@example tutorial
-nb_epochs = 50
-hamming_distance(x::AbstractVector, y::AbstractVector) = sum(x[i] != y[i] for i in eachindex(x))
+nb_epochs = 25
+function hamming_distance(x::AbstractVector, y::AbstractVector)
+    return sum(x[i] != y[i] for i in eachindex(x))
+end
 training_losses, test_losses = Float64[], Float64[]
 Δ_objective_history, hamming_distances = Float64[], Float64[]
 for _ in 1:nb_epochs
     l = mean(flux_loss(x, y) for (x, y) in data_train)
     l_test = mean(flux_loss(x, y) for (x, y) in data_test)
-    Y_pred = [maximizer(model(x.features); instance=x) for x in  X_test]
+    Y_pred = [maximizer(model(x.features); instance=x) for x in X_test]
     values = [evaluate_solution(y, x) for (x, y) in zip(X_test, Y_pred)]
     V = mean((v_pred - v) / v for (v_pred, v) in zip(values, ground_truth_obj))
     H = mean(hamming_distance(y_pred, y.value) for (y_pred, y) in zip(Y_pred, Y_test))
@@ -141,8 +147,8 @@ end
 #### Train and test losses
 
 ````@example tutorial
-println(lineplot(training_losses, title="Training loss"))
-println(lineplot(test_losses, title="Test loss"))
+println(lineplot(training_losses; title="Training loss"))
+println(lineplot(test_losses; title="Test loss"))
 @info "Initial/final training losses" training_losses[1] training_losses[end]
 @info "Initial/final test loss" test_losses[1] test_losses[end]
 ````
@@ -151,37 +157,19 @@ println(lineplot(test_losses, title="Test loss"))
 Let's check the average objective gap
 
 ````@example tutorial
-println(lineplot(Δ_objective_history, title="Objective difference"))
-@info "Initial objective difference" Δ_objective_history[1 ]
+println(lineplot(Δ_objective_history; title="Objective difference"))
+@info "Initial objective difference" Δ_objective_history[1]
 @info "Final objective difference" Δ_objective_history[end]
 ````
 
 The average hamming distance also decreases
 
 ````@example tutorial
-println(lineplot(hamming_distances, title="Hamming distance"))
+println(lineplot(hamming_distances; title="Hamming distance"))
 @info "Initial/final average hamming distance" hamming_distances[1] hamming_distances[end]
 ````
 
 The training was a success.
-
-Some tests for CI
-
-````@example tutorial
-@test training_losses[end] < training_losses[1] / 3
-````
-
-````@example tutorial
-@test test_losses[end] < test_losses[1] / 3
-````
-
-````@example tutorial
-@test Δ_objective_history[end] < Δ_objective_history[1]
-````
-
-````@example tutorial
-@test hamming_distances[end] < hamming_distances[1]
-````
 
 ---
 

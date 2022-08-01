@@ -38,16 +38,12 @@ end
     end
 
     @testset "Miscellaneous" begin
-        # include("miscellaneous.jl")
+        include("miscellaneous.jl")
         include("mini_example.jl")
     end
 
     @testset "City" begin
         include("city.jl")
-    end
-
-    @testset "Features" begin
-        # include("dataset.jl")
     end
 
     @testset "Tutorial" begin
