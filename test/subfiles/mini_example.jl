@@ -1,4 +1,3 @@
-using StochasticVehicleScheduling
 const VSP = StochasticVehicleScheduling
 
 function create_mini_instance(delay::Float64)

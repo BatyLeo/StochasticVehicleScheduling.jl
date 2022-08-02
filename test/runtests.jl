@@ -21,16 +21,12 @@ include("subfiles/utils.jl")
         include("subfiles/task.jl")
     end
 
-    @testset "District" begin
-        include("subfiles/district.jl")
-    end
-
-    @testset "Miscellaneous" begin
-        include("subfiles/miscellaneous.jl")
+    @testset "City" begin
+        include("subfiles/city.jl")
         include("subfiles/mini_example.jl")
     end
 
-    @testset "City" begin
-        include("subfiles/city.jl")
+    @testset "Algorithms" begin
+        include("subfiles/compare_algorithms.jl")
     end
 end

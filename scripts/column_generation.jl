@@ -1,10 +1,10 @@
-using BenchmarkTools
-using ConstrainedShortestPaths
-using InferOpt.Testing
-using StochasticVehicleScheduling
-using JLD2
+# using BenchmarkTools
+# using ConstrainedShortestPaths
+# using Graphs
+using Gurobi
+using InferOpt
 using Random
-using Graphs
+using StochasticVehicleScheduling
 
 # dataset_path = "data/data.jld2"
 # data = load(dataset_path)["data"];
@@ -30,9 +30,10 @@ using Graphs
 # f()
 
 Random.seed!(1)
-instance = Instance(create_random_city(; nb_tasks=50, nb_scenarios=1));
+instance = create_random_instance(; nb_tasks=20, nb_scenarios=10);
 
-@time solve_scenarios(instance; model_builder=grb_model)
+optimal_value, optimal_solution = solve_scenarios(instance; model_builder=grb_model);
+optimal_value
 
 # fig = plot_instance(instance);
 # display(fig)
@@ -44,9 +45,18 @@ instance = Instance(create_random_city(; nb_tasks=50, nb_scenarios=1));
 
 #instance.delays
 
-@time column_generation(instance)
+λ, c_low, paths, dual1, dual2 = column_generation(
+    instance; only_relaxation=true, model_builder=grb_model
+);
+obj2, y = compute_solution_from_selected_columns(instance, paths; bin=true);
+obj2
 
-λ, c_low, paths, dual1, dual2 = column_generation(instance);
+λ, c_low, paths, dual1, dual2 = column_generation(
+    instance; only_relaxation=false, model_builder=grb_model
+);
+obj2, y = compute_solution_from_selected_columns(instance, paths; bin=true);
+obj2
+
 #@info "Col gen" obj
 
 #paths
@@ -54,7 +64,6 @@ instance = Instance(create_random_city(; nb_tasks=50, nb_scenarios=1));
 #dual1
 #dual2
 
-obj2, y = compute_solution_from_selected_columns(instance, paths; bin=false);
 #@info "Final" obj2
 
 c_upp, y = compute_solution_from_selected_columns(instance, paths);

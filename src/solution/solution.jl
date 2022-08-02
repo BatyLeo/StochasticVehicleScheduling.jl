@@ -69,6 +69,23 @@ function Solution(path_value::BitMatrix, instance::Instance)
     return Solution(solution, path_value)
 end
 
+function solution_from_paths(paths, instance::Instance)
+    (; graph) = instance
+    mat = falses(nv(graph), nv(graph))
+    for p in paths
+        for i in 1:(length(p) - 1)
+            mat[p[i], p[i + 1]] = true
+        end
+    end
+
+    res = falses(ne(graph))
+    for (i, edge) in enumerate(edges(graph))
+        res[i] = mat[src(edge), dst(edge)]
+    end
+
+    return Solution(res, instance)
+end
+
 function solution_from_JuMP_array(x::AbstractArray, graph::AbstractGraph)
     sol = falses(ne(graph)) # init
 
@@ -257,10 +274,6 @@ end
 function evaluate_solution2(value::BitVector, instance::Instance)
     return evaluate_solution2(Solution(value, instance), instance)
 end
-
-# function evaluate_solution(value::AbstractVector, instance::Instance)
-#     return evaluate_solution(Solution(convert(BitVector, value), instance), instance)
-# end
 
 function to_array(path_value::BitMatrix, instance::Instance)
     graph = instance.graph

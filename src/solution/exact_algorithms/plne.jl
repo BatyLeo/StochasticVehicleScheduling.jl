@@ -1,3 +1,9 @@
+"""
+    solve_scenarios(instance; model_builder)
+
+Returns the optimal solution of the Stochastic VSP instance, by solving the associated MIP.
+Note: If you have Gurobi, use `grb_model` as `model_builder` instead od `cbc_model`.
+"""
 function solve_scenarios(instance::Instance; model_builder=cbc_model)
     (; graph, slacks, delays, city) = instance
     (; delay_cost, vehicle_cost) = city
@@ -69,14 +75,6 @@ function solve_scenarios(instance::Instance; model_builder=cbc_model)
     optimize!(model)
     solution = value.(y)
 
-    # sol = falses(ne(graph))
-    # for (i, edge) in enumerate(edges(graph))
-    #     if isapprox(value(y[src(edge), dst(edge)]), 1; tol=1e-4)
-    #         sol[i] = true
-    #     end
-    # end
-
     sol = solution_from_JuMP_array(solution, graph)
-
     return objective_value(model), sol
 end
