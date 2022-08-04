@@ -21,6 +21,7 @@ using SparseArrays
 using Statistics
 using TensorBoardLogger
 using Test
+using ValueHistories
 using YAML
 
 function __init__()
@@ -45,7 +46,7 @@ include("solution/heuristic_algorithms/local_search.jl")
 
 include("dataset/dataset.jl")
 
-include("visualization/visualization.jl")
+include("visualization/map.jl")
 
 include("learning/easy_problem.jl")
 include("learning/dataset.jl")
@@ -88,7 +89,7 @@ export Trainer, FenchelYoungGLM
 export train_loop!
 
 # Visualization
-export plot_instance, plot_solution
+export plot_instance_on_map, plot_solution_on_map
 
 export save_config
 

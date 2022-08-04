@@ -1,4 +1,9 @@
-function compute_μ_σ(X)
+"""
+    compute_μ_σ(X::Vector{Instance})
+
+Compute mean, standard deviation, and max values for each features in X instances.
+"""
+function compute_μ_σ(X::Vector{<:Instance})
     nb_arcs = 0
     nb_features = size(X[1].features, 1)
     μ = zeros(nb_features)
@@ -24,7 +29,9 @@ function compute_μ_σ(X)
 end
 
 """
-Standardize data.
+    normalize_data!(X, μ, σ)
+
+Standardize each feature of X by centering and reducing with μ and σ.
 """
 function normalize_data!(X, μ, σ)
     for x in X
@@ -35,7 +42,9 @@ function normalize_data!(X, μ, σ)
 end
 
 """
-Reduce data, without centering it.
+    reduce_data!(X, σ)
+
+Reduce X with σ, without centering it.
 """
 function reduce_data!(X, σ)
     for x in X
@@ -45,7 +54,14 @@ function reduce_data!(X, σ)
     end
 end
 
-function generate_samples(nb_samples::Integer; heuristic=true, labeled=true, city_kwargs)
+"""
+    generate_samples(nb_samples::Integer[; heuristic=true, labeled=true, city_kwargs])
+
+Generate `nb_samples` random instances with `city_kwargs`.
+If `labeled`, compute associated solutions for each instance: use local search if
+`heuristic`, else compute optimal solution.
+"""
+function generate_samples(nb_samples::Integer; heuristic=true, labeled=true, city_kwargs, model_builder)
     @info "Generating dataset..." city_kwargs
     X = [Instance(create_random_city(; city_kwargs...)) for _ in 1:nb_samples]
     if !labeled
@@ -54,13 +70,25 @@ function generate_samples(nb_samples::Integer; heuristic=true, labeled=true, cit
         Y = [heuristic_solution(x; nb_it=10_000) for x in X]
         # Y = [solve_deterministic_VSP(x; include_delays=true)[2] for x in X]
     else
-        Y = [solve_scenarios(x; model_builder=grb_model)[2] for x in X]
+        Y = [solve_scenarios(x; model_builder=model_builder)[2] for x in X]
     end
     return X, Y
 end
 
 """
-    generate_dataset
+    generate_dataset(
+        dataset_folder::String,
+        nb_train_samples::Integer,
+        nb_val_samples::Integer,
+        nb_test_samples::Integer;
+        random_seed=67,
+        labeled=true,
+        heuristic=true,
+        city_kwargs,
+    )
+
+Create a dataset in `dataset_folder`, train/validation/test samples, one file per subdataset.
+Also create a config file in the same location with some information.
 """
 function generate_dataset(
     dataset_folder::String,
@@ -71,6 +99,7 @@ function generate_dataset(
     labeled=true,
     heuristic=true,
     city_kwargs,
+    model_builder=cbc_model,
 )
     config = Dict(
         "nb_samples" => Dict(
@@ -93,7 +122,7 @@ function generate_dataset(
     # Fix the seed and generate all the samples
     Random.seed!(random_seed)
     X, Y = generate_samples(
-        nb_total_samples; heuristic=heuristic, labeled=labeled, city_kwargs
+        nb_total_samples; heuristic=heuristic, labeled=labeled, city_kwargs, model_builder
     )
 
     if nb_train_samples > 0

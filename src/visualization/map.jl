@@ -1,4 +1,9 @@
-function plot_instance(instance::Instance)
+"""
+    plot_instance_on_map(instance::Instance)
+
+Draw representation of `instance` on its map.
+"""
+function plot_instance_on_map(instance::Instance; savepath="test.png")
     (; city) = instance
     fig = Figure()
     ax = Axis(fig[1, 1])
@@ -17,15 +22,18 @@ function plot_instance(instance::Instance)
     ax.yticks = ticks
     xlims!(ax, [-1, width + 1])
     ylims!(ax, [-1, width + 1])
-    return fig
+    save(savepath, fig)
 end
 
-function plot_solution(solution::Solution, instance::Instance)
+"""
+    plot_instance_on_map(instance::Instance)
+
+Draw representation of `solution` of `instance` on its map.
+"""
+function plot_solution_on_map(solution::Solution, instance::Instance; savepath="test.png")
     (; city) = instance
     (; tasks, district_width, width) = city
     path_list = compute_path_list(solution)
-    # fig = plot_instance(instance)
-    # ax = contents(fig[1, 1])[1]
     fig = Figure()
     ax = Axis(fig[1, 1])
     for path in path_list
@@ -41,8 +49,6 @@ function plot_solution(solution::Solution, instance::Instance)
             push!(Y, start_point.y)
             push!(X, end_point.x)
             push!(Y, end_point.y)
-            # lines!(ax, [x, start_point.x], [y, start_point.y]; color=:black)
-            # (; x, y) = end_point
         end
         scatterlines!(ax, X, Y)
     end
@@ -51,5 +57,5 @@ function plot_solution(solution::Solution, instance::Instance)
     ax.yticks = ticks
     xlims!(ax, [-1, width + 1])
     ylims!(ax, [-1, width + 1])
-    return fig
+    save(savepath, fig)
 end

@@ -7,14 +7,12 @@ imitation_model_mapping = [
     ("imitation_25tasks10scenarios", "25 tasks"),
     ("imitation_50tasks50scenarios", "50 tasks"),
     ("imitation_100tasks50scenarios", "100 tasks"),
-    #"imitation_mixed" => "Mixed",
 ]
 
 experience_model_mapping = [
     ("experience_25tasks10scenarios", "25 tasks"),
     ("experience_50tasks50scenarios", "50 tasks"),
     ("experience_100tasks50scenarios", "100 tasks"),
-    #"imitation_mixed" => "Mixed",
 ]
 
 target_mapping_1 = [
@@ -29,11 +27,9 @@ target_mapping_2 = [
     ("100tasks50scenarios", "100"),
     ("200tasks50scenarios", "200"),
     ("300tasks10scenarios", "300"),
-    #("400tasks10scenarios", "400"),
     ("500tasks10scenarios", "500"),
     ("750tasks10scenarios", "750"),
     ("1000tasks10scenarios", "1000"),
-    #("mixed", "Mixed"),
 ]
 
 files = readdir(results_dir)
@@ -118,8 +114,35 @@ function task_cost_table(
     return close(table)
 end
 
-task_cost_table(imitation_model_mapping, target_mapping_2)
-gap_table(imitation_model_mapping, target_mapping_1)
+function generate_tables(
+    imitation_model_mapping,
+    experience_model_mapping,
+    target_mapping_1,
+    target_mapping_2
+)
+    table_dir = joinpath("figures", "tables")
 
-task_cost_table(experience_model_mapping, target_mapping_2)
-gap_table(experience_model_mapping, target_mapping_1)
+    gap_table(
+        imitation_model_mapping, target_mapping_1;
+        output_file=joinpath(table_dir, "imitation_gap.tex"),
+        caption="Learning by imitation: cost gap."
+    )
+    task_cost_table(
+        imitation_model_mapping, target_mapping_2;
+        output_file=joinpath(table_dir, "imitation_cost.tex"),
+        caption="Learning by imitation: average cost per task."
+    )
+
+    gap_table(
+        experience_model_mapping, target_mapping_1;
+        output_file=joinpath(table_dir, "experience_gap.tex"),
+        caption="Learning by experience: average cost per task."
+    )
+    task_cost_table(
+        experience_model_mapping, target_mapping_2;
+        output_file=joinpath(table_dir, "experience_cost.tex"),
+        caption="Learning by experience: cost gap."
+    )
+end
+
+generate_tables(imitation_model_mapping, experience_model_mapping, target_mapping_1, target_mapping_2)

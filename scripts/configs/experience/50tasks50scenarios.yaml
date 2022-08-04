@@ -3,7 +3,7 @@ data:
   train_file: "train.jld2"
   validation_file: "validation.jld2"
 train:
-  log_dir: "final_experiments"
+  log_dir: "logs"
   tag: "experience_50tasks50scenarios"
   batchsize: 1
   metrics:

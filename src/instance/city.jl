@@ -238,6 +238,11 @@ function compute_perturbed_end_times!(city::City)
     return nothing
 end
 
+"""
+    get_perturbed_travel_time(city::City, old_task_index::Int, new_task_index::Int, scenario::Int)
+
+Compute the achieved travel time of scenario `scenario` from `old_task_index` to `new_task_index`.
+"""
 function get_perturbed_travel_time(
     city::City, old_task_index::Int, new_task_index::Int, scenario::Int
 )
@@ -398,10 +403,20 @@ function compute_delays(city::City)
     return ε
 end
 
+"""
+    get_nb_tasks(city::City)
+
+Returns the number of tasks in city.
+"""
 function get_nb_tasks(city::City)
     return length(city.tasks)
 end
 
+"""
+    get_nb_scenarios(city::City)
+
+Returns the number of scenarios in city.
+"""
 function get_nb_scenarios(city::City)
     return size(city.scenario_inter_area_factor, 1)
 end

@@ -3,6 +3,15 @@ using Flux
 using StochasticVehicleScheduling
 using Statistics: mean
 using ProgressMeter
+try
+    using Gurobi
+    @info "Gurobi loaded with success !"
+catch
+    @info "Gurobi not found, will use Cbc instead."
+end
+
+const logdir = "logs"
+const data_dir = "data"
 
 log_dirs = [
     "imitation_25tasks10scenarios",
@@ -11,36 +20,24 @@ log_dirs = [
     "experience_25tasks10scenarios",
     "experience_50tasks50scenarios",
     "experience_100tasks50scenarios",
-    # "imitation_mixed",
-    #"experience_mixed",
 ]
-
-# log_dirs = [
-#     "experience_25tasks10scenarios_exact",
-#     "experience_50tasks50scenarios",
-#     "experience_100tasks50scenarios",
-# ]
 
 test_datasets = [
     "25tasks10scenarios",
     "50tasks50scenarios",
     "100tasks50scenarios",
-    "200tasks50scenarios",
-    #"300tasks50scenarios",
-    #"mixed",
 ]
 
 cost_only = [
+    "200tasks50scenarios",
     "300tasks10scenarios",
-    "400tasks10scenarios",
     "500tasks10scenarios",
     "750tasks10scenarios",
     "1000tasks10scenarios",
-    "mixed",
 ]
 
 function evaluate_model(model_dir, test_data)
-    log_dir = joinpath("final_experiments", model_dir)
+    log_dir = joinpath(logdir, model_dir)
     model_file = joinpath(log_dir, "best.jld2")
     config_file = joinpath(log_dir, "config.yaml")
     trainer = Trainer(config_file; create_logger=false)
@@ -52,13 +49,18 @@ function evaluate_model(model_dir, test_data)
 
     step = best_model["epoch"]
 
-    data_dir = joinpath("data", test_data)
-    data_test = load(joinpath(data_dir, "test.jld2"))
+    data = joinpath(data_dir, test_data)
+    data_test = load(joinpath(data, "test.jld2"))
     X_test = data_test["X"]
     Y_test = data_test["Y"]
 
+    model_builder = cbc_model
+    try
+        model_builder = grb_model
+    catch
+    end
     Y_pred = [
-        easy_problem(encoder(x.features); instance=x, model_builder=grb_model) for
+        easy_problem(encoder(x.features); instance=x, model_builder=model_builder) for
         x in X_test
     ]
 
@@ -84,7 +86,7 @@ function evaluate_model(model_dir, test_data)
 end
 
 function evaluate_cost(model_dir, test_data)
-    log_dir = joinpath("final_experiments", model_dir)
+    log_dir = joinpath(logdir, model_dir)
     model_file = joinpath(log_dir, "best.jld2")
     config_file = joinpath(log_dir, "config.yaml")
     trainer = Trainer(config_file; create_logger=false)
@@ -96,8 +98,8 @@ function evaluate_cost(model_dir, test_data)
     encoder[1].weight ./= reshape(σ, 1, 20)  # rescale
     step = best_model["epoch"]
 
-    data_dir = joinpath("data", test_data)
-    data_test = load(joinpath(data_dir, "test.jld2"))
+    data = joinpath(data_dir, test_data)
+    data_test = load(joinpath(data, "test.jld2"))
 
     X_test = data_test["X"]
 
@@ -105,11 +107,16 @@ function evaluate_cost(model_dir, test_data)
     c_sum = 0
     c_max = 0
     c = 0
+    model_builder = cbc_model
+    try
+        model_builder = grb_model
+    catch
+    end
     @showprogress for x in X_test
         c += 1
         solution_cost =
             cost(
-                easy_problem(encoder(x.features); instance=x, model_builder=grb_model);
+                easy_problem(encoder(x.features); instance=x, model_builder=model_builder);
                 instance=x,
             ) / x.city.nb_tasks
         c_max = max(solution_cost, c_max)
@@ -125,14 +132,22 @@ function evaluate_cost(model_dir, test_data)
     )
 end
 
-for log_dir in log_dirs
-    res = Dict()
-    for test_data in test_datasets
-        res[test_data] = evaluate_model(log_dir, test_data)
+function evaluate_models(log_dirs, test_datasets, cost_only)
+    for log_dir in log_dirs
+        res = Dict()
+        for test_data in test_datasets
+            res[test_data] = evaluate_model(log_dir, test_data)
+        end
+        for test_data in cost_only
+            res[test_data] = evaluate_cost(log_dir, test_data)
+        end
+        result_dir = joinpath(logdir, "results")
+        if !isdir(result_dir)
+            mkdir(result_dir)
+        end
+        jldsave(joinpath(result_dir, "$log_dir.jld2"); data=res)
+        println("---")
     end
-    for test_data in cost_only
-        res[test_data] = evaluate_cost(log_dir, test_data)
-    end
-    jldsave(joinpath("final_experiments", "results", "$log_dir.jld2"); data=res)
-    println("---")
 end
+
+evaluate_models(log_dirs, test_datasets, cost_only)
