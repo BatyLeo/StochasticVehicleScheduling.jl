@@ -1,7 +1,9 @@
 using JLD2
-using NamedTupleTools
+#using NamedTupleTools
 
-results_dir = joinpath("final_experiments", "results")
+log_dir = "logs"
+figure_dir = "figures"
+results_dir = joinpath(log_dir, "results")
 
 imitation_model_mapping = [
     ("imitation_25tasks10scenarios", "25 tasks"),
@@ -34,14 +36,13 @@ target_mapping_2 = [
 
 files = readdir(results_dir)
 
-# ! hardcoded
 function gap_table(
-    model_mapping, target_mapping; output_file="table.tex", caption="Cost gap"
+    model_mapping, target_mapping; output_file="table.tex",
 )
     table = open(output_file, "w")
     # write header
-    write(table, "\\begin{table}[H]\n")
-    write(table, "\\centering\n")
+    # write(table, "\\begin{table}[H]\n")
+    # write(table, "\\centering\n")
     nb_col = length(target_mapping) * 2
     write(table, "\\begin{tabular}{|c|$("c"^nb_col)|}\n\\hline\n")
     header = "\\multirow{3}{*}{\\textbf{Train dataset}} & \\multicolumn{$nb_col}{c|}{\\textbf{Test dataset}} \\\\ \\cline{2-$(nb_col+1)}\n"
@@ -72,19 +73,19 @@ function gap_table(
     end
     # write ending
     write(table, "\\end{tabular}\n")
-    write(table, "\\caption{$caption}\n")
-    write(table, "\\end{table}\n")
+    # write(table, "\\caption{$caption}\n")
+    # write(table, "\\end{table}\n")
     return close(table)
 end
 
 function task_cost_table(
-    model_mapping, target_mapping; output_file="table.tex", caption="Average cost per task"
+    model_mapping, target_mapping; output_file="table.tex"
 )
     metric_name = "average_cost_per_task"
     table = open(output_file, "w")
     # write header
-    write(table, "\\begin{table}[H]\n")
-    write(table, "\\centering\n")
+    # write(table, "\\begin{table}[H]\n")
+    # write(table, "\\centering\n")
     nb_col = length(target_mapping)
     write(table, "\\begin{tabular}{|c|$("c"^nb_col)|}\n\\hline\n")
     header = "\\multirow{2}{*}{\\textbf{Train dataset}} & \\multicolumn{$nb_col}{c|}{\\textbf{Test dataset} (number of tasks in each instance)} \\\\ \\cline{2-$(nb_col+1)}\n"
@@ -109,8 +110,8 @@ function task_cost_table(
     end
     # write ending
     write(table, "\\end{tabular}\n")
-    write(table, "\\caption{$caption}\n")
-    write(table, "\\end{table}\n")
+    # write(table, "\\caption{$caption}\n")
+    # write(table, "\\end{table}\n")
     return close(table)
 end
 
@@ -120,28 +121,24 @@ function generate_tables(
     target_mapping_1,
     target_mapping_2
 )
-    table_dir = joinpath("figures", "tables")
+    table_dir = joinpath(figure_dir, "tables")
 
     gap_table(
         imitation_model_mapping, target_mapping_1;
         output_file=joinpath(table_dir, "imitation_gap.tex"),
-        caption="Learning by imitation: cost gap."
     )
     task_cost_table(
         imitation_model_mapping, target_mapping_2;
         output_file=joinpath(table_dir, "imitation_cost.tex"),
-        caption="Learning by imitation: average cost per task."
     )
 
     gap_table(
         experience_model_mapping, target_mapping_1;
         output_file=joinpath(table_dir, "experience_gap.tex"),
-        caption="Learning by experience: average cost per task."
     )
     task_cost_table(
         experience_model_mapping, target_mapping_2;
         output_file=joinpath(table_dir, "experience_cost.tex"),
-        caption="Learning by experience: cost gap."
     )
 end
 
