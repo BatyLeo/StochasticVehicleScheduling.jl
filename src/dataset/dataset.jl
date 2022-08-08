@@ -61,7 +61,9 @@ Generate `nb_samples` random instances with `city_kwargs`.
 If `labeled`, compute associated solutions for each instance: use local search if
 `heuristic`, else compute optimal solution.
 """
-function generate_samples(nb_samples::Integer; heuristic=true, labeled=true, city_kwargs, model_builder)
+function generate_samples(
+    nb_samples::Integer; heuristic=true, labeled=true, city_kwargs, model_builder=cbc_model
+)
     @info "Generating dataset..." city_kwargs
     X = [Instance(create_random_city(; city_kwargs...)) for _ in 1:nb_samples]
     if !labeled

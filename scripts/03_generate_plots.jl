@@ -4,7 +4,7 @@ using ValueHistories
 
 const logdir = "logs"
 const figure_dir = "figures/plots"
-const Δ = 10.0
+# const Δ = 0.0
 
 const models = Dict(
     "imitation_25tasks10scenarios" => "25 tasks",
@@ -43,10 +43,10 @@ function generate_plots(models, tags)
             ytrain = hist[train_tag].values
             xvalidation = hist[validation_tag].iterations
             yvalidation = hist[validation_tag].values
-            if occursin("cost gap", value)
-                ytrain .+= Δ
-                yvalidation .+= Δ
-            end
+            # if occursin("cost gap", value)
+            #     ytrain .+= Δ
+            #     yvalidation .+= Δ
+            # end
             # for i in eachindex(ytrain)
             #     ytrain[i] = max(ytrain[i], 1e-5)
             # end
@@ -55,7 +55,7 @@ function generate_plots(models, tags)
             # end
 
             fig = Figure()
-            ax = Axis(fig[1, 1]; yscale=log10)
+            ax = Axis(fig[1, 1])#; yscale=log10)
             ax.xlabel = "epochs"
 
             ax.title = value

@@ -36,9 +36,7 @@ target_mapping_2 = [
 
 files = readdir(results_dir)
 
-function gap_table(
-    model_mapping, target_mapping; output_file="table.tex",
-)
+function gap_table(model_mapping, target_mapping; output_file="table.tex")
     table = open(output_file, "w")
     # write header
     # write(table, "\\begin{table}[H]\n")
@@ -78,9 +76,7 @@ function gap_table(
     return close(table)
 end
 
-function task_cost_table(
-    model_mapping, target_mapping; output_file="table.tex"
-)
+function task_cost_table(model_mapping, target_mapping; output_file="table.tex")
     metric_name = "average_cost_per_task"
     table = open(output_file, "w")
     # write header
@@ -116,30 +112,33 @@ function task_cost_table(
 end
 
 function generate_tables(
-    imitation_model_mapping,
-    experience_model_mapping,
-    target_mapping_1,
-    target_mapping_2
+    imitation_model_mapping, experience_model_mapping, target_mapping_1, target_mapping_2
 )
     table_dir = joinpath(figure_dir, "tables")
 
     gap_table(
-        imitation_model_mapping, target_mapping_1;
+        imitation_model_mapping,
+        target_mapping_1;
         output_file=joinpath(table_dir, "imitation_gap.tex"),
     )
     task_cost_table(
-        imitation_model_mapping, target_mapping_2;
+        imitation_model_mapping,
+        target_mapping_2;
         output_file=joinpath(table_dir, "imitation_cost.tex"),
     )
 
     gap_table(
-        experience_model_mapping, target_mapping_1;
+        experience_model_mapping,
+        target_mapping_1;
         output_file=joinpath(table_dir, "experience_gap.tex"),
     )
-    task_cost_table(
-        experience_model_mapping, target_mapping_2;
+    return task_cost_table(
+        experience_model_mapping,
+        target_mapping_2;
         output_file=joinpath(table_dir, "experience_cost.tex"),
     )
 end
 
-generate_tables(imitation_model_mapping, experience_model_mapping, target_mapping_1, target_mapping_2)
+generate_tables(
+    imitation_model_mapping, experience_model_mapping, target_mapping_1, target_mapping_2
+)

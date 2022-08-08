@@ -67,7 +67,7 @@ export Solution, solution_from_JuMP_array, basic_solution, get_routes, solution_
 export cbc_model, glpk_model
 export solve_deterministic_VSP, easy_problem
 export local_search, heuristic_solution
-export column_generation, compute_solution_from_selected_columns
+export column_generation, compute_solution_from_selected_columns, column_generation_algorithm
 export solve_scenarios
 
 # Dataset

@@ -22,11 +22,7 @@ log_dirs = [
     "experience_100tasks50scenarios",
 ]
 
-test_datasets = [
-    "25tasks10scenarios",
-    "50tasks50scenarios",
-    "100tasks50scenarios",
-]
+test_datasets = ["25tasks10scenarios", "50tasks50scenarios", "100tasks50scenarios"]
 
 cost_only = [
     "200tasks50scenarios",

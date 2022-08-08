@@ -74,7 +74,7 @@ function column_generation(
     c_low = objective_value(model)
     paths = cat(initial_paths, new_paths; dims=1)
     c_upp, y, _ = compute_solution_from_selected_columns(instance, paths)
-    @info paths[[y[p] for p in paths] .== 1.0]
+    # @info paths[[y[p] for p in paths] .== 1.0]
 
     # If relaxation requested or solution is optimal, return
     if c_upp ≈ c_low || only_relaxation
@@ -85,17 +85,11 @@ function column_generation(
 
     # else, try to close the gap
     threshold = (c_upp - c_low - vehicle_cost) / delay_cost
-    @info "There is a threshold" c_upp c_low threshold
+    # @info "There is a threshold" c_upp c_low threshold
     λ_val = value.(λ)
     additional_paths, costs = stochastic_routing_shortest_path_with_threshold(
         graph, slacks, delays, λ_val ./ delay_cost; threshold
     )
-    # (; c_star, p_star) = stochastic_routing_shortest_path(
-    #     graph, slacks, delays, λ_val ./ delay_cost
-    # )
-    # @info "" c_star p_star delay_cost * c_star + vehicle_cost
-
-    # @info "Additional paths" additional_paths sort(costs)
 
     return value.(λ),
     objective_value(model),
@@ -140,4 +134,11 @@ function compute_solution_from_selected_columns(
 
     sol = value.(y)
     return objective_value(model), sol, paths[[sol[p] for p in paths] .== 1.0]
+end
+
+function column_generation_algorithm(instance::Instance)
+    _, _, columns, _, _ = column_generation(instance)
+    _, _, sol = compute_solution_from_selected_columns(instance, columns)
+    col_solution = solution_from_paths(sol, instance)
+    return col_solution
 end

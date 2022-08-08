@@ -3,9 +3,7 @@ using StochasticVehicleScheduling
 
 function main_imitation()
     files = [
-        "25tasks10scenarios.yaml",
-        "50tasks50scenarios.yaml",
-        "100tasks50scenarios.yaml",
+        "25tasks10scenarios.yaml", "50tasks50scenarios.yaml", "100tasks50scenarios.yaml"
     ]
     for file in files
         Random.seed!(67)
@@ -17,9 +15,7 @@ end
 
 function main_experience()
     files = [
-        "25tasks10scenarios.yaml",
-        "50tasks50scenarios.yaml",
-        "100tasks50scenarios.yaml",
+        "25tasks10scenarios.yaml", "50tasks50scenarios.yaml", "100tasks50scenarios.yaml"
     ]
     for file in files
         Random.seed!(67)

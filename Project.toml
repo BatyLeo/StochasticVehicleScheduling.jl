@@ -4,7 +4,6 @@ authors = ["Léo Baty and contributors"]
 version = "0.1.0"
 
 [deps]
-CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 Cbc = "9961bab8-2fa3-5c5a-9d89-47fab24efd76"
 ConstrainedShortestPaths = "b3798467-87dc-4d99-943d-35a1bd39e395"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -28,7 +27,6 @@ TensorBoardLogger = "899adc3e-224a-11e9-021f-63837185c80f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ValueHistories = "98cad3c8-aec3-5f06-8e41-884608649ab7"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
-Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 julia = "1.7"

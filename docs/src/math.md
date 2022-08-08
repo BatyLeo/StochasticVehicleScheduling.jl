@@ -1,97 +1,36 @@
-# Mathematical formulation
-
-Here we define the Stochastic vehicle scheduling problem and how to build an InferOpt end-to-end learning pipeline which can predict solutions of this difficult problem.
+# Problem statement
 
 ## Deterministic Vehicle Scheduling
 
-Vehicle Scheduling involves assigning vehicles to cover a set of scheduled tasks, while minimizing the number of vehicles used and other costs.
-### Instance
-An instance of the problem is composed of:
-- A set of tasks ``v\in\bar V``:
-    - Scheduled task begin time: ``t_v^b``
-    - Scheduled task end time: ``t_v^e (> t_v^b)``
-    - Scheduled travel time from task ``u`` to task ``v``: ``t_{(u, v)}^{tr}``
-- Task ``v`` can be scheduled after task ``u`` on a vehicle path only if: ``t_v^b \geq t_u^e + t_{(u, v)}^{tr}``
-- Vehicle cost: ``c_{\text{vehicle}}``
-- Objective to minimize: ``c_{\text{vehicle}}\times [\text{number of vehicle used}]``
-
-### Mathematical model
-We model an instance by the following acyclic Digraph ``D = (V, A)``:
-- ``V = \bar V\cup \{o, d\}``, with ``o`` and ``d`` dummy origin and destination nodes connected to all tasks:
-    - ``(o, v)`` arc for all task ``v\in \bar V``
-    - ``(v, d)`` arc for all task ``v \in \bar V``
-- There is an arc between tasks ``u`` and ``v`` only if ``t_v^b \geq t_u^e + t_{(u, v)}^{tr}``
-
-A feasible vehicle tour is a ``o-d`` path ``P\in\mathcal P``. A feasible solution is a set of disjoint feasible vehicle tours fulfilling all tasks exactly once. This can be formulated as the following flow Linear Program:
+The Vehicle Scheduling Problem (VSP) consists in assigning vehicles to cover a set of scheduled tasks, while minimizing total costs. Let ``\bar V`` be the set of tasks. Each task ``v\in \bar V`` has a scheduled beginning time ``t_v^b``, and a scheduled end time ``t_v^e``, such that ``t_v^e > t_v^b``. We denote ``t^{tr}_{(u, v)}`` the travel time from task ``u`` to task ``v``. A task ``v`` can be scheduled after another task ``u`` only if we can reach it in time, before it starts, i.e. if
 ```math
-\boxed{\begin{aligned}
-\min & \, c_{\text{vehicle}}\sum_{a\in \delta^+(o)} y_a &\\
-s.t. & \sum_{a\in \delta^-(v)} y_a = \sum_{a\in \delta^+(v)} y_a, & \forall v \in V\backslash \{o, d\}\\
-& \sum_{a\in \delta^-(v)} y_a = 1, & \forall v \in V\backslash \{o, d\}\\
-& y_a \in \{0, 1\}, &\forall a\in A
-\end{aligned}}
+t_v^b \geq t_u^e + t^{tr}_{(u, v)}
 ```
 
-``\implies`` easy to solve
+An instance of VSP can be modeled with a directed graph ``D = (V, A)``, with ``V = \bar V\cup\{o, d\}``, and ``o``, ``d`` origin and destination dummy nodes. All tasks are connected to ``o``, and ``d`` is connected to all tasks. There is an arc between two tasks ``u`` and ``v`` only if the equation above is satisfied. The resulting graph ``D`` is acyclic.
+
+A solution of the VSP problem is a list of disjoint ``o-d`` paths such that all tasks are fulfilled exactly once. The objective is to minimize the number of vehicles used. This can be formulated as the following Linear Program:
+
+```math
+\begin{aligned}
+\min & \, \sum_{a\in \delta^+(o)} y_a &\\
+s.t. & \sum_{a\in \delta^-(v)} y_a = \sum_{a\in \delta^+(v)} y_a, & \forall v \in \bar V\\
+& \sum_{a\in \delta^-(v)} y_a = 1, & \forall v \in \bar V\\
+& (y_a \in \{0, 1\}), &\forall a\in A
+\end{aligned}
+```
+
+This can be solved either using a flow algorithm, or using a linear program solver (constraints form a flow polytope, the binary constraint can be relaxed, and we obtain an easy to solve Linear Program).
 
 ---
 
 ## Stochastic Vehicle Scheduling
 
-Stochastic vehicle scheduling is a variation of the deterministic version presented above, but scheduled task times can be perturbed by random events after the scheduling is fixed. The goal is now to also minimize the expectation of the total delay.
+In the Stochastic Vehicle Scheduling Problem (StoVSP), we consider the same setting as the deterministic version, to which we add the following. Once the scheduling decision is set, we observe random delays, which propagate along vehicle tours. The objective is to minimize the sum of vehicle costs and expected total delay costs.
 
-We consider the same framework as above, to which we add the following:
-- Delay cost: ``c_\text{delay}``
-- Set of scenarios ``\Omega``.
-- We introduce three sets of random variables, which can take different values depending on the scenario ``\omega\in\Omega``
-    - Perturbed beginning time: ``\xi_v^b \geq t_v^b``
-    - Perturbed end time: ``\xi_v^e \geq t_v^e``
-    - Perturbed travel time: ``\xi_{(u,v)}^{tr} \geq t_{(u,v)}^{tr}``
-- We fix ``\xi_o^e = 0`` and ``\xi_d^b = +\infty``
-- Given a ``o-uv`` path ``P``, we define recursively the end time ``\tau_v``, and the total delay ``\Delta_v`` along ``P``:
+We consider a finite set of scenarios ``s\in S``. For each task ``v\in \bar V``, we denote ``\gamma_v^s`` the intrinsic delay of ``v`` in scenario ``s``, and ``d_v^s`` its total delay. We also denote ``\delta_{u, v}^s`` the slack between tasks ``u`` and ``v``. These quantities follow the delay propagation equation when ``u`` and ``v`` are consecutively operated by the same vehicle:
 ```math
-\boxed{\left\{\begin{aligned}
-\tau_v &= \xi_v^e + \max(\tau_u +\xi_{(u,v)}^{tr} - \xi_v^b, 0)\\
-\Delta_v &= \Delta_u + \max(\tau_u +\xi_{(u,v)}^{tr} - \xi_v^b, 0)
-\end{aligned}\right.}
+d_v^s = \gamma_v^s + \max(d_u^s - \delta_{u, v}^s, 0)
 ```
 
-- Objective to minimize: ``c_{\text{vehicle}} \times [\text{number of vehicles used}] + c_\text{delay} \times \mathbb E[\text{total delay}]``
-
-### MIP formulation
-```math
-\begin{aligned}
-\min & \,c_{\text{vehicle}}\sum_{a\in \delta^+(o)} y_a + \frac{c_{\text{delay}}}{|\Omega|}\sum_{\omega\in\Omega}\sum_{v\in V\backslash\{o, d\}} \Delta_v^\omega\\
-\text{s.t.} & \sum_{a\in\delta^-(v)}y_a = \sum_{a\in\delta^+(v)}y_a &\forall v\in V\backslash\{o, d\}\\
-& \sum_{a\in\delta^-(v)}y_a = 1 &\forall v\in V\backslash\{o, d\}\\
-& \Delta_v^\omega \geq \sum_{a\in\delta^-(v), a=(u, v)} (\Delta_u^\omega + \tau_u^\omega + \xi_{(u,v)}^{tr}(\omega) - \xi_v^b(\omega)) y_a & \forall v\in V\backslash\{o, d\}, \forall \omega\in\Omega\\
-& \tau_v^\omega \geq \xi_v^e(\omega) + \sum_{a\in\delta^-(v), a=(u, v)} (\tau_u^\omega + \xi_{(u,v)}^{tr}(\omega) - \xi_v^b(\omega)) y_a & \forall v\in V\backslash\{o, d\}, \forall \omega\in\Omega\\
-& \Delta_v^\omega\geq 0 & \forall v\in V\backslash\{o, d\}, \forall \omega\in\Omega\\
-& \tau_v^\omega\geq 0 & \forall v\in V\backslash\{o, d\}, \forall \omega\in\Omega\\
-& y_a\in\{0,1\} & \forall a\in A
-\end{aligned}
-```
-- Quadratic delay constraints can be linearized using [Mc Cormick linearization](https://optimization.mccormick.northwestern.edu/index.php/McCormick_envelopes).
-
-``\implies`` does not scale well with tasks and scenarios number
-
-### Column generation formulation
-
-Cost of a path ``P``: ``c_P^\omega = c_{\text{vehicle}} + c_\text{delay}\times \Delta_P^\omega``
-
-```math
-\begin{aligned}
-\min & \frac{1}{|\Omega|}\sum_{\omega\in\Omega}\sum_{p\in\mathcal{P}}c_p^\omega y_p &\\
-\text{s.t.} & \sum_{p\ni v} y_p = 1 &\forall v\in V\backslash\{o, d\} \quad(\lambda_v\in\mathbb R)\\
-& y_p\in\{0,1\} & \forall p\in \mathcal{P}
-\end{aligned}
-```
-
-This formulation can be solved using a column generation algorithm. The associated sub-problem is a constrained shortest path problem of the form :
-```math
-\min_{P\in\mathcal P} (c_P  - \sum_{v\in P}\lambda_v)
-```
-
-This kind of problem can be solved using generalized ``A^\star`` algorithms (cf. [Parmentier 2017](https://arxiv.org/abs/1504.07880) and [ConstrainedShortestPath.jl](https://github.com/BatyLeo/ConstrainedShortestPaths.jl)).
-
-``\implies`` better, but still does not scale well
+This leads to a much more difficult problem to solve. If the instance isn't too big, we can solve it using an integer program with quadratic constraints or a column generation algorithm.
