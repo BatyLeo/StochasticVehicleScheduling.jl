@@ -71,9 +71,10 @@ Quadratic delay constraints can be linearized using [Mc Cormick linearization](h
 ``\implies`` does not scale well with tasks and scenarios number
 =#
 
-mip_value, mip_solution = solve_scenarios(instance);
+mip_value, mip_solution = solve_scenarios(instance)
 println("MIP optimal value: $mip_value")
-# plot_solution_on_map(solution, instance)
+
+# The solution value is better than both heuristic values, as expected.
 
 #=
 ### Column generation formulation
@@ -102,3 +103,5 @@ It can be solved using generalized ``A^\star`` algorithms (cf. [Parmentier 2017]
 col_solution = column_generation_algorithm(instance)
 col_value = evaluate_solution(col_solution, instance)
 println("Column generation optimal value: $col_value")
+
+# The column generation solution has the same value as the MIP one, as expected (both are optimal).
