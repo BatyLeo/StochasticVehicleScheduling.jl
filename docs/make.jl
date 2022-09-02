@@ -7,7 +7,9 @@ literate_dir = joinpath(dirname(@__DIR__), "docs", "src", "literate")
 jl_files = readdir(literate_dir)  # joinpath(literate_dir, "tutorial.jl")
 
 for jl_file in jl_files
-    Literate.markdown(joinpath(literate_dir, jl_file), md_dir; documenter=true, execute=false)
+    Literate.markdown(
+        joinpath(literate_dir, jl_file), md_dir; documenter=true, execute=false
+    )
 end
 
 DocMeta.setdocmeta!(
@@ -32,10 +34,7 @@ makedocs(;
         "math.md",
         "dataset.md",
         "algorithms.md",
-        "Learning with InferOpt.jl" => [
-            "inferopt.md",
-            "paper.md",
-        ],
+        "Learning with InferOpt.jl" => ["inferopt.md", "paper.md"],
         "api.md",
     ],
 )

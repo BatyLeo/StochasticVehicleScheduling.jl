@@ -6,7 +6,7 @@ package, and illustrate them on the following small instance, with 25 tasks and 
 =#
 
 using StochasticVehicleScheduling
-instance = create_random_instance(nb_tasks=25, nb_scenarios=10)
+instance = create_random_instance(; nb_tasks=25, nb_scenarios=10)
 plot_instance_on_map(instance)
 
 #=
@@ -97,7 +97,6 @@ The associated sub-problem of the column generation formulation is a constrained
 It can be solved using generalized ``A^\star`` algorithms (cf. [Parmentier 2017](https://arxiv.org/abs/1504.07880) and [ConstrainedShortestPath.jl](https://github.com/BatyLeo/ConstrainedShortestPaths.jl)).
 
 ``\implies`` still does not scale well when the number of tasks and scenarios increases
-
 
 =#
 col_solution = column_generation_algorithm(instance)

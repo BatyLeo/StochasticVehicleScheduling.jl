@@ -24,6 +24,13 @@ using Test
 using ValueHistories
 using YAML
 
+# Should be remove in next JuMP version
+function Base.getindex(
+    x::JuMP.Containers._AxisLookup{Dict{K,Int}}, key::K
+) where {K<:AbstractVector}
+    return x.data[key]
+end
+
 function __init__()
     @info "If you have Gurobi installed and want to use it, make sure to `using Gurobi` in order to enable it."
     @require Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b" include("gurobi_setup.jl")
@@ -67,7 +74,8 @@ export Solution, solution_from_JuMP_array, basic_solution, get_routes, solution_
 export cbc_model, glpk_model
 export solve_deterministic_VSP, easy_problem
 export local_search, heuristic_solution
-export column_generation, compute_solution_from_selected_columns, column_generation_algorithm
+export column_generation,
+    compute_solution_from_selected_columns, column_generation_algorithm
 export solve_scenarios
 
 # Dataset

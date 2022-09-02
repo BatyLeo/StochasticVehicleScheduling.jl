@@ -41,6 +41,6 @@ function experiment(seed::Int)
     @test full_value ≈ optimal_value
 end
 
-for i in 1:20
+for i in 1:1
     experiment(i)
 end

@@ -1,3 +1,4 @@
+using BenchmarkTools
 using JLD2
 using Flux
 using StochasticVehicleScheduling
@@ -55,10 +56,10 @@ function evaluate_model(model_dir, test_data)
         model_builder = grb_model
     catch
     end
-    Y_pred = [
-        easy_problem(encoder(x.features); instance=x, model_builder=model_builder) for
-        x in X_test
-    ]
+
+    pipeline(x) = easy_problem(encoder(x.features); instance=x, model_builder=model_builder)
+
+    Y_pred = [pipeline(x) for x in X_test]
 
     (; cost) = trainer
     train_cost = [cost(y; instance=x) for (x, y) in zip(X_test, Y_pred)]
@@ -72,12 +73,18 @@ function evaluate_model(model_dir, test_data)
             (c - c_opt) / abs(c_opt) for (c, c_opt) in zip(train_cost, train_cost_opt)
         ) * 100
     average_cost_per_task = mean(c / x.city.nb_tasks for (c, x) in zip(train_cost, X_test))
-    @info "$log_dir -> $test_data" step average_cost_gap max_cost_gap average_cost_per_task
+
+    elapsed_time = @elapsed [pipeline(x) for x in X_test]
+    elapsed_time_heuristic = @elapsed [heuristic_solution(x; nb_it=10_000) for x in X_test]
+
+    @info "$log_dir -> $test_data" step average_cost_gap max_cost_gap average_cost_per_task elapsed_time elapsed_time_heuristic
     return Dict(
         "step" => step,
         "average_cost_gap" => average_cost_gap,
         "max_cost_gap" => max_cost_gap,
         "average_cost_per_task" => average_cost_per_task,
+        "elapsed_time" => elapsed_time / length(X_test),
+        "elapsed_time_heuristic" => elapsed_time_heuristic / length(X_test),
     )
 end
 
