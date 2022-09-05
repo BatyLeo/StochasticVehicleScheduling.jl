@@ -34,7 +34,7 @@ function read_model(model_dir)
 end
 
 function cool_plot(models, tags)
-    f = Figure(backgroundcolor=RGBf(1., 1., 1.), resolution=(800, 1200))
+    f = Figure(; backgroundcolor=RGBf(1.0, 1.0, 1.0), resolution=(800, 1200))
     ga = f[1, 1] = GridLayout()
 
     local ax
@@ -44,10 +44,10 @@ function cool_plot(models, tags)
             model_dir = joinpath(logdir, model)
             hist = read_model(model_dir)
 
-            ax = Axis(ga[irow+1, icol], xlabel="epochs")
+            ax = Axis(ga[irow + 1, icol]; xlabel="epochs")
             # Link axes with previous plot if there is one
             if icol > 1
-                linkxaxes!(ax_list[icol-1], ax)
+                linkxaxes!(ax_list[icol - 1], ax)
                 #linkyaxes!(ax_list[icol-1], ax)
             end
             train_tag = "train/$tag"
@@ -59,19 +59,18 @@ function cool_plot(models, tags)
 
             lines!(ax, xtrain, ytrain; label="Training metric")
             lines!(ax, xvalidation, yvalidation; label="Validation metric")
-            ax.xticks = 0:xtrain[end]/5:xtrain[end]
+            ax.xticks = 0:(xtrain[end] / 5):xtrain[end]
 
             push!(ax_list, ax)
 
-            Label(
-                ga[irow+1, icol, Top()], "$text", valign=:bottom,
-                padding=(0, 0, 1, 0)
-            )
+            Label(ga[irow + 1, icol, Top()], "$text"; valign=:bottom, padding=(0, 0, 1, 0))
         end
         Label(
-            ga[irow+1, 1:length(ax_list), Top()], "$value", valign=:bottom,
+            ga[irow + 1, 1:length(ax_list), Top()],
+            "$value";
+            valign=:bottom,
             font="TeX Gyre Heros Bold",
-            padding=(0, 0, 20, 0)
+            padding=(0, 0, 20, 0),
         )
     end
 
