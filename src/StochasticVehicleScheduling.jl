@@ -75,23 +75,13 @@ export solve_scenarios
 export generate_dataset, normalize_data!, compute_μ_σ, reduce_data!, generate_samples
 
 # Training
-# dropfirstdim(z::AbstractArray) = dropdims(z; dims=1)
-# make_negative(z::AbstractArray; threshold=0.0) = -exp.(z) - threshold
-
-export plot_perf, test_perf
-# export dropfirstdim, make_negative
-
-export compute_metrics!
-export Loss, AllCosts
-
 export read_config
-# export AbstractDataset, SupervisedDataset, ExperienceDataset
-export Trainer, FenchelYoungGLM
+export save_config
+export Trainer
+export compute_metrics!
 export train_loop!
 
 # Visualization
 export plot_instance_on_map, plot_solution_on_map
-
-export save_config
 
 end

@@ -73,7 +73,7 @@ function column_generation(
 
     c_low = objective_value(model)
     paths = cat(initial_paths, new_paths; dims=1)
-    @info paths
+    # @info paths
     c_upp, y, _ = compute_solution_from_selected_columns(instance, paths)
     # @info paths[[y[p] for p in paths] .== 1.0]
 
@@ -133,7 +133,7 @@ function compute_solution_from_selected_columns(
         )
     )
 
-    @info "Hella"
+    # @info "Hella"
 
     @constraint(model, con[v in job_indices], sum(y[p] for p in paths if v in p) == 1)
 
