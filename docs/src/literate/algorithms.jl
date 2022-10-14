@@ -6,6 +6,8 @@ package, and illustrate them on the following small instance, with 25 tasks and 
 =#
 
 using StochasticVehicleScheduling
+using Random
+Random.seed!(1)  # fix the seed for reproducibility
 instance = create_random_instance(; nb_tasks=25, nb_scenarios=10)
 plot_instance_on_map(instance)
 
@@ -67,14 +69,18 @@ One way to solve the stochastic vehicle scheduling problem is to model it as the
 \end{aligned}
 ```
 Quadratic delay constraints can be linearized using [Mc Cormick linearization](https://optimization.mccormick.northwestern.edu/index.php/McCormick_envelopes).
-
-``\implies`` does not scale well with tasks and scenarios number
 =#
 
 mip_value, mip_solution = solve_scenarios(instance)
 println("MIP optimal value: $mip_value")
 
-# The solution value is better than both heuristic values, as expected.
+#=
+The solution value is better than both heuristic values, as expected.
+
+!!! note
+
+    This method does not scale well with tasks and scenarios number.
+=#
 
 #=
 ### Column generation formulation
@@ -94,13 +100,18 @@ The associated sub-problem of the column generation formulation is a constrained
 ```math
 \min_{P\in\mathcal P} (c_P  - \sum_{v\in P}\lambda_v)
 ```
-It can be solved using generalized ``A^\star`` algorithms (cf. [Parmentier 2017](https://arxiv.org/abs/1504.07880) and [ConstrainedShortestPath.jl](https://github.com/BatyLeo/ConstrainedShortestPaths.jl)).
-
-``\implies`` still does not scale well when the number of tasks and scenarios increases
-
+It can be solved using generalized ``A^\star`` algorithms (see theoretical details [Parmentier 2017](https://arxiv.org/abs/1504.07880) and [ConstrainedShortestPath.jl](https://github.com/BatyLeo/ConstrainedShortestPaths.jl) for its Julia implementation).
 =#
 col_solution = column_generation_algorithm(instance)
 col_value = evaluate_solution(col_solution, instance)
 println("Column generation optimal value: $col_value")
 
-# The column generation solution has the same value as the MIP one, as expected (both are optimal).
+#=
+The column generation solution has the same value as the MIP one, as expected (both are optimal).
+
+!!! note
+
+    Column generation works better than the direct MIP, but still does not scale well when the number of tasks and scenarios increase too much.
+    One way to do better is to use `InferOpt.jl` to build and learn an hybrid pipeline containing machine learning and combinatorial optimization layers.
+    Checkout the [InferOpt tutorial](@ref) for an in-depth tutorial.
+=#

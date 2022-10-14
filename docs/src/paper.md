@@ -1,4 +1,4 @@
-# Reproduce paper experiments
+# Reproducing paper experiments
 
 All the scripts needed to reproduce experiments from the [paper](https://arxiv.org/abs/2207.13513) can be found in the [`scripts` folder](https://github.com/BatyLeo/StochasticVehicleScheduling.jl/tree/main/scripts).
 

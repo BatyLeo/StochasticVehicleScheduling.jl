@@ -7,9 +7,9 @@ The Vehicle Scheduling Problem (VSP) consists in assigning vehicles to cover a s
 t_v^b \geq t_u^e + t^{tr}_{(u, v)}
 ```
 
-An instance of VSP can be modeled with a directed graph ``D = (V, A)``, with ``V = \bar V\cup\{o, d\}``, and ``o``, ``d`` origin and destination dummy nodes. All tasks are connected to ``o``, and ``d`` is connected to all tasks. There is an arc between two tasks ``u`` and ``v`` only if the equation above is satisfied. The resulting graph ``D`` is acyclic.
+An instance of VSP can be modeled with a directed graph ``D = (V, A)``, with ``V = \bar V\cup\{o, d\}``, and ``o``, ``d`` origin and destination dummy nodes. All tasks are connected to ``o``, and ``d`` is connected to all tasks. There is an arc between two tasks ``u`` and ``v`` only if the equation above is satisfied. The resulting graph ``D`` is acyclic. For all arc ``a\in A``, we denote ``\theta_a`` the cost of using ``a``.
 
-A solution of the VSP problem is a list of disjoint ``o-d`` paths such that all tasks are fulfilled exactly once. The objective is to minimize the number of vehicles used. This can be formulated as the following Linear Program:
+A solution of the VSP problem is a list of disjoint ``o-d`` paths such that all tasks are fulfilled exactly once. The objective is to minimize the total cost. This can be formulated as the following Linear Program:
 
 ```math
 \begin{aligned}
@@ -20,7 +20,7 @@ s.t. & \sum_{a\in \delta^-(v)} y_a = \sum_{a\in \delta^+(v)} y_a, & \forall v \i
 \end{aligned}
 ```
 
-This can be solved either using a flow algorithm, or using a linear program solver (constraints form a flow polytope, the binary constraint can be relaxed, and we obtain an easy to solve Linear Program).
+The constraints matrix being totally unimodular, integrity constraints can be dropped and the problem can be solved using a linear solver.
 
 ---
 

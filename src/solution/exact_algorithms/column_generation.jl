@@ -121,9 +121,9 @@ function compute_solution_from_selected_columns(
         @variable(model, y[p in paths] >= 0)
     end
 
-    @info "Hello" paths [p for p in paths]
-    @info y[paths[1]]
-    @info [y[p] for p in paths]
+    # @info "Hello" paths [p for p in paths]
+    # @info y[paths[1]]
+    # @info [y[p] for p in paths]
 
     @objective(
         model,

@@ -11,7 +11,7 @@ For example, we can create a random instance with 10 tasks and 10 scenarios and 
 
 ````@example dataset
 using StochasticVehicleScheduling
-instance = create_random_instance(nb_tasks=10, nb_scenarios=10)
+instance = create_random_instance(; nb_tasks=10, nb_scenarios=10)
 plot_instance_on_map(instance)
 ````
 
