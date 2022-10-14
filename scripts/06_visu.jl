@@ -40,14 +40,12 @@ function visualize_solution(x, y, start_times, vehiclesgt; output_file="groundtr
                 lengthscale=1.0,
             )
         end
-        #lines!(xs, ys, color=:black)
     end
     Colorbar(fig2[:, end + 1], hm2; ticks=0:5:60)
     save(output_file, fig2)
     return nothing
 end
 
-# encoder = load("logs/test_new_inferopt_normalized_16/model_10000.jld2")["data"]
 function main(index)
     encoder = Chain(Dense(20 => 1; bias=false), vec)
 
@@ -77,7 +75,6 @@ function main(index)
     visualize_solution(
         x, y, start_times, vehiclesgt; output_file="figures/local_search.png"
     )
-    #visualize_solution(x, ypred, start_times, vehiclesgt; output_file="figures/local_search.png")
     visualize_solution(
         x, ypred1, start_times, vehiclesgt; output_file="figures/imitation.png"
     )

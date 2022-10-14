@@ -48,7 +48,6 @@ function cool_plot(models, tags)
             # Link axes with previous plot if there is one
             if icol > 1
                 linkxaxes!(ax_list[icol - 1], ax)
-                #linkyaxes!(ax_list[icol-1], ax)
             end
             train_tag = "train/$tag"
             validation_tag = "validation/$tag"

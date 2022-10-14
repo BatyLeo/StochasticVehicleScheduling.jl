@@ -1,5 +1,4 @@
 using JLD2
-#using NamedTupleTools
 
 log_dir = "logs"
 figure_dir = "figures"
@@ -36,45 +35,6 @@ target_mapping_2 = [
 
 files = readdir(results_dir)
 
-# function gap_table(model_mapping, target_mapping; output_file="table.tex")
-#     table = open(output_file, "w")
-#     # write header
-#     # write(table, "\\begin{table}[H]\n")
-#     # write(table, "\\centering\n")
-#     nb_col = length(target_mapping) * 2
-#     write(table, "\\begin{tabular}{|c|$("c"^nb_col)|}\n\\hline\n")
-#     header = "\\multirow{3}{*}{\\textbf{Train dataset}} & \\multicolumn{$nb_col}{c|}{\\textbf{Test dataset}} \\\\ \\cline{2-$(nb_col+1)}\n"
-#     for (_, column_name) in values(target_mapping)
-#         header *= " & \\multicolumn{2}{c|}{$column_name}"
-#     end
-#     header *= "\\\\\n\\cline{2-$(nb_col+1)}\n"
-#     for (_, column_name) in values(target_mapping)
-#         header *= " & \\multicolumn{1}{c|}{mean} & \\multicolumn{1}{c|}{max}"
-#     end
-#     header *= "\\\\\n\\hline\n"
-#     write(table, header)
-#     # loop on rows
-#     for (key, row) in model_mapping
-#         println(key)
-#         file = "$key.jld2"
-#         data = load(joinpath(results_dir, file))["data"]
-#         # row = model_mapping[key]
-#         # loop on columns
-#         for (target, _) in target_mapping
-#             # value = data[target][metric_name]
-#             average_gap = data[target]["average_cost_gap"]
-#             max_gap = data[target]["max_cost_gap"]
-#             row *= " & \\multicolumn{1}{c|}{\$$(round(average_gap, digits=2))\\%\$} & \\multicolumn{1}{c|}{\$$(round(max_gap, digits=2))\\%\$}"
-#         end
-#         row *= "\\\\\n\\hline\n"
-#         write(table, row)
-#     end
-#     # write ending
-#     write(table, "\\end{tabular}\n")
-#     # write(table, "\\caption{$caption}\n")
-#     # write(table, "\\end{table}\n")
-#     return close(table)
-# end
 function gap_table(model_mapping, target_mapping; output_file="table.tex")
     table = open(output_file, "w")
     # write header
@@ -95,7 +55,6 @@ function gap_table(model_mapping, target_mapping; output_file="table.tex")
         new_row = "\\\\\n\\midrule\n" * row
         file = "$key.jld2"
         data = load(joinpath(results_dir, file))["data"]
-        # row = model_mapping[key]
         # loop on columns
         for (target, _) in target_mapping
             average_gap = data[target]["average_cost_gap"]
@@ -119,7 +78,6 @@ function task_cost_table(model_mapping, target_mapping; output_file="table.tex")
     for (_, column_name) in values(target_mapping)
         header *= " & $column_name"
     end
-    #header *= "\\\\\n\\hline\n"
     write(table, header)
     # loop on rows
     for (key, row) in model_mapping
@@ -160,7 +118,6 @@ function time_table(model_mapping, target_mapping; output_file="table.tex")
         new_row = "\\\\\n\\midrule\n"# * row
         file = "$key.jld2"
         data = load(joinpath(results_dir, file))["data"]
-        # row = model_mapping[key]
         # loop on columns
         for (target, _) in target_mapping
             elapsed_time = data[target]["elapsed_time"]
