@@ -18,7 +18,6 @@ using InferOpt
 using Random
 using Statistics: mean
 using StochasticVehicleScheduling
-using UnicodePlots
 Random.seed!(1);
 nothing #hide
 ````
