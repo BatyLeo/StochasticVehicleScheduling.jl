@@ -69,7 +69,7 @@ jobs:
         run: >
             cd docs;
             DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24'
-            julia --color=yes make.jl
+            julia --project=. --color=yes make.jl
       #- uses: julia-actions/julia-buildpkg@v1
       # - uses: julia-actions/julia-docdeploy@v1
       #   env:
