@@ -34,6 +34,7 @@ jobs:
       - uses: julia-actions/cache@v1
       - run: sudo apt-get update && sudo apt-get install -y xorg-dev mesa-utils xvfb libgl1 freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
       #- uses: julia-actions/julia-buildpkg@v1
+      # See https://github.com/MakieOrg/Makie.jl/blob/master/.github/workflows/glmakie.yaml for source model
       - name: Install Julia dependencies
         shell: julia --project=monorepo {0}
         run: |
@@ -56,14 +57,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install binary dependencies
+        run: sudo apt-get update && sudo apt-get install -y xorg-dev mesa-utils xvfb libgl1 freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1'
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-docdeploy@v1
+      - name: Build and deploy docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+        run: >
+            cd docs;
+            DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24'
+            julia --color=yes make.jl
+      #- uses: julia-actions/julia-buildpkg@v1
+      # - uses: julia-actions/julia-docdeploy@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
       - run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
