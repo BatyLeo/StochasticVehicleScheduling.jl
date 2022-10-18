@@ -63,7 +63,7 @@ jobs:
         with:
           version: '1'
       - name: Install Julia dependencies
-        shell: julia --project=docs
+        shell: julia --project=docs {0}
         run: |
           using Pkg;
           Pkg.instantiate();
