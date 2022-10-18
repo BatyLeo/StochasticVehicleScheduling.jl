@@ -63,7 +63,7 @@ jobs:
         with:
           version: '1'
       - name: Install Julia dependencies
-        shell: DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --project=docs {0}
+        shell: julia --project=docs {0}
         run: |
           using Pkg;
           Pkg.instantiate();
