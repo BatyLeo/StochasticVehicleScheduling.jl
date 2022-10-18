@@ -65,7 +65,7 @@ jobs:
       - name: Install Julia dependencies
         run: >
             DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24'
-            julia --project=docs --color=yes 'using Pkg; Pkg.instantiate();'
+            julia --project=docs --color=yes -e 'using Pkg; Pkg.instantiate();'
       - name: Build and deploy docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
