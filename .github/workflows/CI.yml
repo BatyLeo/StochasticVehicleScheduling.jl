@@ -63,11 +63,9 @@ jobs:
         with:
           version: '1'
       - name: Install Julia dependencies
-        shell: julia --project=docs {0}
-        run: |
-          using Pkg;
-          Pkg.instantiate();
-          Pkg.precompile();
+        run: >
+            DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24'
+            julia --project=docs --color=yes 'using Pkg; Pkg.instantiate();'
       - name: Build and deploy docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
