@@ -63,10 +63,11 @@ jobs:
         with:
           version: '1'
       - name: Install Julia dependencies
-        shell: julia --project=docs {0}
+        shell: DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --project=docs {0}
         run: |
           using Pkg;
           Pkg.instantiate();
+          Pkg.precompile();
       - name: Build and deploy docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -81,7 +82,7 @@ jobs:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #     DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
       - run: |
-          julia --project=docs -e '
+          DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --project=docs -e '
             using Documenter: DocMeta, doctest
             using StochasticVehicleScheduling
             DocMeta.setdocmeta!(StochasticVehicleScheduling, :DocTestSetup, :(using StochasticVehicleScheduling); recursive=true)
