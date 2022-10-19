@@ -1,24 +1,23 @@
-```@meta
-EditURL = "<unknown>/docs/src/literate/dataset.jl"
-```
+# # Instance generator
 
-# Instance generator
-
+#=
 This package implements an instance generator, which can be used with the
 [`create_random_instance`](@ref) method.
 
 For example, we can create a random instance with 10 tasks and 10 scenarios and plot it:
+=#
 
-````@example dataset
 using StochasticVehicleScheduling
 instance = create_random_instance(; nb_tasks=10, nb_scenarios=10)
 plot_instance_on_map(instance)
-````
 
+#=
 This instance object can be used as input of all algorithms implemented in this package.
 More details on its attributes and how they are computed are provided bellow but not needed
 in order to experiment with this package.
+=#
 
+#=
 ## City
 
 When creating an instance, we first create a [`StochasticVehicleScheduling.City`](@ref) object.
@@ -76,8 +75,4 @@ An instance contains a matrix of 20 features for every arc of the corresponding 
 - Cost of a vehicle if the arc is connected to the source.
 - The 9 deciles of the slack ``\xi_v^b - (\xi_u^e + \xi_a^{tr})``.
 - The cumulative probability distribution of the slack, evaluated in ``[-100, -50, -20, -10, 0, 50, 200, 500]``.
-
----
-
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
-
+=#

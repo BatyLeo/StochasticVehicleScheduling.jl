@@ -44,9 +44,11 @@ function find_first_one(A::AbstractVector)
     return nothing
 end
 
-# config stuff
+# Config stuff
 """
-Convert recursively a Dict to a NamedTuple
+    recursive_namedtuple(x)
+
+Convert recursively a Dict to a NamedTuple.
 """
 recursive_namedtuple(x::Any) = x
 function recursive_namedtuple(d::Dict)
@@ -54,7 +56,9 @@ function recursive_namedtuple(d::Dict)
 end
 
 """
-Convert recursively a NamedTuple to a Dict
+    recursive_convert(x)
+
+Convert recursively a NamedTuple to a Dict.
 """
 recursive_convert(x::Any) = x
 function recursive_convert(x::NamedTuple)
@@ -63,21 +67,27 @@ function recursive_convert(x::NamedTuple)
 end
 
 """
-Read a Yaml config in to a NamedTuple
+    read_config(config_file::String)
+
+Read a Yaml config into a NamedTuple.
 """
 function read_config(config_file::String)
     return recursive_namedtuple(YAML.load_file(config_file; dicttype=Dict{Symbol,Any}))
 end
 
 """
-Save a NamedTuple config to yaml file
+    save_config(config::NamedTuple, save_path::String)
+
+Save a NamedTuple config to yaml file.
 """
 function save_config(config::NamedTuple, save_path::String)
     return YAML.write_file(save_path, recursive_convert(config))
 end
 
 """
-Save Dict config to yaml file
+    save_config(config::Dict, save_path::String)
+
+Save Dict config to yaml file.
 """
 function save_config(config::Dict, save_path::String)
     return YAML.write_file(save_path, config)
