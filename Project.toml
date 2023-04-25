@@ -31,6 +31,7 @@ YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
 ConstrainedShortestPaths = "0.2"
+Flux = "0.13"
 GLMakie = "0.7, 0.8"
 GLPK = "1"
 Graphs = "1"
