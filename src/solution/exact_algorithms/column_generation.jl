@@ -88,7 +88,7 @@ function column_generation(
     threshold = (c_upp - c_low - vehicle_cost) / delay_cost
     # @info "There is a threshold" c_upp c_low threshold
     λ_val = value.(λ)
-    additional_paths, costs = stochastic_routing_shortest_path_with_threshold(
+    additional_paths, costs = ConstrainedShortestPaths.stochastic_routing_shortest_path_with_threshold(
         graph, slacks, delays, λ_val ./ delay_cost; threshold
     )
 
