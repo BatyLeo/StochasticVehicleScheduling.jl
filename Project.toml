@@ -30,6 +30,7 @@ ValueHistories = "98cad3c8-aec3-5f06-8e41-884608649ab7"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
+Cbc = "1"
 ConstrainedShortestPaths = "0.2"
 Flux = "0.13"
 GLMakie = "0.7, 0.8"
