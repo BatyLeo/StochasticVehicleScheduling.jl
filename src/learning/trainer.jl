@@ -96,7 +96,7 @@ function Trainer(config; create_logger=true)
     # Optimizer
     (; name, args) = config.train.optimizer
     if isnothing(args)
-        opt = eval(Meta.parse(name))()
+        opt = eval(Meta.parse(name))
     else
         opt = eval(Meta.parse(name))(args...)
     end

@@ -4,7 +4,7 @@ data:
   validation_file: "validation.jld2"
 train:
   log_dir: "logs"
-  tag: "experience_50tasks50scenarios"
+  tag: "experience_50tasks50scenariosDescent"
   batchsize: 1
   metrics:
     train_and_validation:
@@ -13,7 +13,7 @@ train:
     train:
     validation:
   optimizer:
-    name: "ADAM"
+    name: "Descent(1e-6)"
     args:
   nb_epochs: 200
   save_every_n_epochs: 100

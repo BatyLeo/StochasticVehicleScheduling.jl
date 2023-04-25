@@ -34,7 +34,7 @@ function easy_problem(θ::AbstractVector; instance::Instance, model_builder=cbc_
 
     solution = falses(ne(graph))
     for (i, edge) in enumerate(edges(graph))
-        if value(y[edge.src, edge.dst]) ≈ 1
+        if isapprox(value(y[edge.src, edge.dst]), 1; atol=1e-3)
             solution[i] = true
         end
     end

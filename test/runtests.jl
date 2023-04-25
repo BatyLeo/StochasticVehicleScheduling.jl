@@ -3,9 +3,9 @@ using JuliaFormatter
 using StochasticVehicleScheduling
 using Test
 
-format(StochasticVehicleScheduling; verbose=true)
-
 include("subfiles/utils.jl")
+
+format(StochasticVehicleScheduling; verbose=true)
 
 @testset verbose = true "StochasticVehicleScheduling.jl" begin
     @testset "Code quality (Aqua.jl)" begin

@@ -1,7 +1,7 @@
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
-#/Manifest.toml
+# Manifest.toml
 /docs/build/
 /tensorboard_logs
 /logs
@@ -10,3 +10,4 @@
 /final_experiments*
 scripts/*.toml
 /data1
+/data_old

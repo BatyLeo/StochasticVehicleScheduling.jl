@@ -7,6 +7,7 @@ using Flux
 using GLMakie
 using GLPK
 using Graphs
+using HiGHS
 using InferOpt
 using JLD2
 using JuMP
@@ -64,7 +65,7 @@ export evaluate_solution, evaluate_solution2
 export Solution, solution_from_JuMP_array, basic_solution, get_routes, solution_from_paths
 
 # Solvers
-export cbc_model, glpk_model
+export cbc_model, glpk_model, highs_model
 export solve_deterministic_VSP, easy_problem
 export local_search, heuristic_solution
 export column_generation,
