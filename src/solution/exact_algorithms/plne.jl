@@ -6,14 +6,12 @@ Note: If you have Gurobi, use `grb_model` as `model_builder` instead od `cbc_mod
 """
 function solve_scenarios(instance::AbstractInstance; model_builder=highs_model)
     (; graph, slacks, delays, vehicle_cost, delay_cost) = instance
-    # (; delay_cost, vehicle_cost) = city
     nb_nodes = nv(graph)
     job_indices = 2:(nb_nodes - 1)
     nodes = 1:nb_nodes
 
     # Pre-processing
     ε = delays
-    #Rmax = maximum(ε, dims=1)
     Rmax = maximum(sum(ε; dims=1))
     nb_scenarios = size(ε, 2)
     Ω = 1:nb_scenarios

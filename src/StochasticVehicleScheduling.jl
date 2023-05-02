@@ -47,8 +47,6 @@ include("solution/heuristic_algorithms/local_search.jl")
 
 include("dataset/dataset.jl")
 
-# include("visualization/map.jl")
-
 include("learning/easy_problem.jl")
 include("learning/dataset.jl")
 include("learning/trainer.jl")
@@ -82,8 +80,5 @@ export save_config
 export Trainer
 export compute_metrics!
 export train_loop!
-
-# Visualization
-# export plot_instance_on_map, plot_solution_on_map
 
 end

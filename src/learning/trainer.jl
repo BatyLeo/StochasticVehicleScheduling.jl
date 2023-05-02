@@ -168,23 +168,13 @@ end
 
 function my_custom_train!(loss, ps, data, opt)
     local training_loss
-    #grad_sum = 0.0
     for batch in data
         gs = gradient(ps) do
             training_loss = loss(batch...)
             return training_loss
         end
-        # n = 0
-        # total = 0.0
-        # for p in ps
-        #     g = gs[p]
-        #     total += sum(abs, g)
-        #     n += length(g)
-        # end
-        # grad_sum += total / n
         Flux.update!(opt, ps, gs)
     end
-    #@info grad_sum / length(data)
     return nothing
 end
 
@@ -200,11 +190,3 @@ function train_loop!(trainer::Trainer; show_progress=true)
         next!(p)
     end
 end
-
-# Specific constructors
-
-# --
-
-# function normalizing(x::Vector)
-#     return x / LinearAlgebra.norm(x)
-# end

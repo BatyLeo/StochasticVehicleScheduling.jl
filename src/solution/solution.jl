@@ -241,43 +241,6 @@ function evaluate_scenario(
     return total_delay
 end
 
-# """
-#     evaluate_scenario2(path_value::BitMatrix, instance::AbstractInstance, scenario_index::Int)
-
-# Compute total delay of each task in scenario.
-# """
-# function evaluate_scenario2(path_value::BitMatrix, instance::AbstractInstance, scenario_index::Int)
-#     total_delay = 0.0
-#     nb_tasks = instance.city.nb_tasks
-
-#     task_delays = zeros(nb_tasks)
-
-#     for i_vehicle in 1:nb_tasks
-#         # no delay if no tasks
-#         if !any(@view path_value[i_vehicle, :])
-#             continue
-#         end
-
-#         task_delay = 0.0
-#         old_task_index = 1 # always start at depot
-
-#         for i_task in 1:nb_tasks
-#             # check if task is done by this vehicle
-#             if !path_value[i_vehicle, i_task]
-#                 continue
-#             end
-#             task_delay = evaluate_task(
-#                 i_task + 1, instance, old_task_index, task_delay, scenario_index
-#             )
-#             old_task_index = i_task + 1
-
-#             total_delay += task_delay
-#             task_delays[i_task] = task_delay
-#         end
-#     end
-#     return task_delays
-# end
-
 """
     evaluate_scenario(solution::Solution, instance::AbstractInstance, scenario_index::Int)
 
@@ -288,19 +251,6 @@ function evaluate_scenario(
 )
     return evaluate_scenario(solution.path_value, instance, scenario_index)
 end
-
-# function evaluate_solution2(path_value::BitMatrix, instance::AbstractInstance)
-#     nb_scenarios = get_nb_scenarios(instance)
-
-#     nb_tasks = instance.city.nb_tasks
-#     average_delay = zeros(nb_tasks)
-#     for s in 1:nb_scenarios
-#         average_delay .+= evaluate_scenario2(path_value, instance, s)
-#     end
-#     average_delay ./= nb_scenarios
-
-#     return average_delay
-# end
 
 """
     evaluate_scenario(path_value::BitMatrix, instance::AbstractInstance, scenario_index::Int)
@@ -329,17 +279,9 @@ function evaluate_solution(solution::Solution, instance::AbstractInstance)
     return evaluate_solution(solution.path_value, instance)
 end
 
-# function evaluate_solution2(solution::Solution, instance::AbstractInstance)
-#     return evaluate_solution2(solution.path_value, instance)
-# end
-
 function evaluate_solution(value::BitVector, instance::AbstractInstance)
     return evaluate_solution(Solution(value, instance), instance)
 end
-
-# function evaluate_solution2(value::BitVector, instance::AbstractInstance)
-#     return evaluate_solution2(Solution(value, instance), instance)
-# end
 
 function to_array(path_value::BitMatrix, instance::AbstractInstance)
     graph = instance.graph
