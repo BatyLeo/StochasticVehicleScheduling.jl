@@ -12,7 +12,24 @@ For example, we can create a random instance with 10 tasks and 10 scenarios and 
 ````@example dataset
 using StochasticVehicleScheduling
 instance = create_random_instance(; nb_tasks=10, nb_scenarios=10)
-plot_instance_on_map(instance)
+
+using Plots
+fig = plot()
+for i in 1:(get_nb_tasks(instance) + 1)
+    task = instance.city.tasks[i]
+    (; start_point, end_point) = task
+    points = [(start_point.x, start_point.y), (end_point.x, end_point.y)]
+    plot!(fig, points; color=:black, label="")
+    scatter!(
+        fig,
+        points;
+        marker=:rect,
+        markersize=10,
+        label="",
+        series_annotations=[("$(i-1)", 9), ""],
+    )
+end
+fig
 ````
 
 This instance object can be used as input of all algorithms implemented in this package.

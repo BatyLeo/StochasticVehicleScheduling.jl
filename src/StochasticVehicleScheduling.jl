@@ -59,7 +59,7 @@ include("learning/perf.jl")
 # Data structures
 export create_random_city, create_random_instance, create_random_compact_instance
 export Instance, CompactInstance, Solution
-export get_nb_scenarios
+export get_nb_scenarios, get_nb_tasks
 export is_admissible
 
 export evaluate_solution#, evaluate_solution2
