@@ -57,11 +57,12 @@ include("learning/metrics.jl")
 include("learning/perf.jl")
 
 # Data structures
-export create_random_city, create_random_instance
-export Instance, Solution
+export create_random_city, create_random_instance, create_random_compact_instance
+export Instance, CompactInstance, Solution
+export get_nb_scenarios
 export is_admissible
 
-export evaluate_solution, evaluate_solution2
+export evaluate_solution#, evaluate_solution2
 export Solution, solution_from_JuMP_array, basic_solution, get_routes, solution_from_paths
 
 # Solvers

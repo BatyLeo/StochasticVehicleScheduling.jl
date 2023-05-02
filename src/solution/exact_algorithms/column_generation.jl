@@ -22,12 +22,12 @@ end
 Note: If you have Gurobi, use `grb_model` as `model_builder` instead of `glpk_model`.
 """
 function column_generation(
-    instance::Instance; only_relaxation=false, model_builder=glpk_model
+    instance::AbstractInstance; only_relaxation=false, model_builder=glpk_model
 )
-    (; graph, slacks, delays, city) = instance
+    (; graph, slacks, delays, vehicle_cost, delay_cost) = instance
 
-    vehicle_cost = city.vehicle_cost
-    delay_cost = city.delay_cost
+    # vehicle_cost = city.vehicle_cost
+    # delay_cost = city.delay_cost
 
     nb_nodes = nv(graph)
     job_indices = 2:(nb_nodes - 1)
@@ -100,15 +100,15 @@ function column_generation(
 end
 
 """
-    compute_solution_from_selected_columns(instance, paths[; bin=true])
+    compute_solution_from_selected_columns(instance::AbstractInstance, paths[; bin=true])
 
 Note: If you have Gurobi, use `grb_model` as `model_builder` instead od `glpk_model`.
 """
 function compute_solution_from_selected_columns(
-    instance::Instance, paths; bin=true, model_builder=glpk_model
+    instance::AbstractInstance, paths; bin=true, model_builder=glpk_model
 )
-    (; graph, slacks, delays, city) = instance
-    (; vehicle_cost, delay_cost) = city
+    (; graph, slacks, delays, vehicle_cost, delay_cost) = instance
+    # (; vehicle_cost, delay_cost) = city
 
     nb_nodes = nv(graph)
     job_indices = 2:(nb_nodes - 1)
@@ -143,7 +143,7 @@ function compute_solution_from_selected_columns(
     return objective_value(model), sol, paths[[sol[p] for p in paths] .== 1.0]
 end
 
-function column_generation_algorithm(instance::Instance)
+function column_generation_algorithm(instance::AbstractInstance)
     _, _, columns, _, _ = column_generation(instance)
     _, _, sol = compute_solution_from_selected_columns(instance, columns)
     col_solution = solution_from_paths(sol, instance)

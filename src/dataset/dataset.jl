@@ -3,7 +3,7 @@
 
 Compute mean, standard deviation, and max values for each features in X instances.
 """
-function compute_μ_σ(X::Vector{<:Instance})
+function compute_μ_σ(X::Vector{<:AbstractInstance})
     nb_arcs = 0
     nb_features = size(X[1].features, 1)
     μ = zeros(nb_features)
