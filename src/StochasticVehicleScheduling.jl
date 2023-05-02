@@ -4,7 +4,7 @@ using Cbc
 using ConstrainedShortestPaths
 using Distributions
 using Flux
-using GLMakie
+# using GLMakie
 using GLPK
 using Graphs
 using HiGHS
@@ -47,7 +47,7 @@ include("solution/heuristic_algorithms/local_search.jl")
 
 include("dataset/dataset.jl")
 
-include("visualization/map.jl")
+# include("visualization/map.jl")
 
 include("learning/easy_problem.jl")
 include("learning/dataset.jl")
@@ -56,7 +56,7 @@ include("learning/models.jl")
 include("learning/metrics.jl")
 include("learning/perf.jl")
 
-# Data strutures
+# Data structures
 export create_random_city, create_random_instance
 export Instance, Solution
 export is_admissible
@@ -83,6 +83,6 @@ export compute_metrics!
 export train_loop!
 
 # Visualization
-export plot_instance_on_map, plot_solution_on_map
+# export plot_instance_on_map, plot_solution_on_map
 
 end

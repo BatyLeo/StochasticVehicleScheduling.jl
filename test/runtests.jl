@@ -5,16 +5,9 @@ using Test
 
 include("subfiles/utils.jl")
 
-format(StochasticVehicleScheduling; verbose=true)
-
 @testset verbose = true "StochasticVehicleScheduling.jl" begin
-    @testset "Code quality (Aqua.jl)" begin
-        Aqua.test_all(
-            StochasticVehicleScheduling;
-            deps_compat=false,
-            project_extras=true,
-            ambiguities=false,
-        )
+    @testset "Code" begin
+        include("subfiles/code.jl")
     end
 
     @testset "Tasks" begin
