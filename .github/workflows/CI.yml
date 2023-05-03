@@ -20,10 +20,12 @@ jobs:
         version: ['1.7', '1']
         os: [ubuntu-latest]
         arch: [x64]
+        prefix: [xvfb-run]
         allow_failure: [false]
         include:
           - version: 'nightly'
             os: ubuntu-latest
+            prefix: xvfb-run
             arch: x64
             allow_failure: true
     steps:
