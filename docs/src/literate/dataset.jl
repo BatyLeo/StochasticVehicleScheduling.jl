@@ -26,9 +26,10 @@ for i in 1:(get_nb_tasks(instance) + 1)
         series_annotations=[("$(i-1)", 9), ""],
     )
 end
-fig
+savefig(fig, "instance2.png"); # hide
 
 #=
+![instance2](instance2.png)
 This instance object can be used as input of all algorithms implemented in this package.
 More details on its attributes and how they are computed are provided bellow but not needed
 in order to experiment with this package.

@@ -29,9 +29,11 @@ for i in 1:(get_nb_tasks(instance) + 1)
         series_annotations=[("$(i-1)", 9), ""],
     )
 end
-fig
+savefig(fig, "instance.png"); # hide
+nothing #hide
 ````
 
+![instance](instance.png)
 ## Heuristic algorithms
 
 The first category of algorithms implemented are heuristics, which given good but not
