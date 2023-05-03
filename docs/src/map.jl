@@ -1,3 +1,5 @@
+using GLMakie
+
 """
     plot_instance_on_map(instance::Instance)
 

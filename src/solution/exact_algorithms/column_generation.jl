@@ -22,12 +22,9 @@ end
 Note: If you have Gurobi, use `grb_model` as `model_builder` instead of `glpk_model`.
 """
 function column_generation(
-    instance::Instance; only_relaxation=false, model_builder=glpk_model
+    instance::AbstractInstance; only_relaxation=false, model_builder=glpk_model
 )
-    (; graph, slacks, delays, city) = instance
-
-    vehicle_cost = city.vehicle_cost
-    delay_cost = city.delay_cost
+    (; graph, slacks, delays, vehicle_cost, delay_cost) = instance
 
     nb_nodes = nv(graph)
     job_indices = 2:(nb_nodes - 1)
@@ -73,9 +70,7 @@ function column_generation(
 
     c_low = objective_value(model)
     paths = cat(initial_paths, new_paths; dims=1)
-    # @info paths
     c_upp, y, _ = compute_solution_from_selected_columns(instance, paths)
-    # @info paths[[y[p] for p in paths] .== 1.0]
 
     # If relaxation requested or solution is optimal, return
     if c_upp ≈ c_low || only_relaxation
@@ -86,9 +81,8 @@ function column_generation(
 
     # else, try to close the gap
     threshold = (c_upp - c_low - vehicle_cost) / delay_cost
-    # @info "There is a threshold" c_upp c_low threshold
     λ_val = value.(λ)
-    additional_paths, costs = stochastic_routing_shortest_path_with_threshold(
+    additional_paths, costs = ConstrainedShortestPaths.stochastic_routing_shortest_path_with_threshold(
         graph, slacks, delays, λ_val ./ delay_cost; threshold
     )
 
@@ -100,15 +94,14 @@ function column_generation(
 end
 
 """
-    compute_solution_from_selected_columns(instance, paths[; bin=true])
+    compute_solution_from_selected_columns(instance::AbstractInstance, paths[; bin=true])
 
 Note: If you have Gurobi, use `grb_model` as `model_builder` instead od `glpk_model`.
 """
 function compute_solution_from_selected_columns(
-    instance::Instance, paths; bin=true, model_builder=glpk_model
+    instance::AbstractInstance, paths; bin=true, model_builder=glpk_model
 )
-    (; graph, slacks, delays, city) = instance
-    (; vehicle_cost, delay_cost) = city
+    (; graph, slacks, delays, vehicle_cost, delay_cost) = instance
 
     nb_nodes = nv(graph)
     job_indices = 2:(nb_nodes - 1)
@@ -121,10 +114,6 @@ function compute_solution_from_selected_columns(
         @variable(model, y[p in paths] >= 0)
     end
 
-    # @info "Hello" paths [p for p in paths]
-    # @info y[paths[1]]
-    # @info [y[p] for p in paths]
-
     @objective(
         model,
         Min,
@@ -132,8 +121,6 @@ function compute_solution_from_selected_columns(
             (delay_cost * delay_sum(p, slacks, delays) + vehicle_cost) * y[p] for p in paths
         )
     )
-
-    # @info "Hella"
 
     @constraint(model, con[v in job_indices], sum(y[p] for p in paths if v in p) == 1)
 
@@ -143,7 +130,7 @@ function compute_solution_from_selected_columns(
     return objective_value(model), sol, paths[[sol[p] for p in paths] .== 1.0]
 end
 
-function column_generation_algorithm(instance::Instance)
+function column_generation_algorithm(instance::AbstractInstance)
     _, _, columns, _, _ = column_generation(instance)
     _, _, sol = compute_solution_from_selected_columns(instance, columns)
     col_solution = solution_from_paths(sol, instance)

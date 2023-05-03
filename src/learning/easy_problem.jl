@@ -1,10 +1,12 @@
 """
-    easy_problem(θ[; instance, model_builder])
+    easy_problem(θ[; instance::AbstractInstance, model_builder])
 
 Solves the easy problem of the learning pipeline given arcs weights θ.
 Note: If you have Gurobi, use `grb_model` as `model_builder` instead od `cbc_model`.
 """
-function easy_problem(θ::AbstractVector; instance::Instance, model_builder=cbc_model)
+function easy_problem(
+    θ::AbstractVector; instance::AbstractInstance, model_builder=cbc_model
+)
     (; graph) = instance
 
     model = model_builder()
@@ -34,7 +36,7 @@ function easy_problem(θ::AbstractVector; instance::Instance, model_builder=cbc_
 
     solution = falses(ne(graph))
     for (i, edge) in enumerate(edges(graph))
-        if value(y[edge.src, edge.dst]) ≈ 1
+        if isapprox(value(y[edge.src, edge.dst]), 1; atol=1e-3)
             solution[i] = true
         end
     end

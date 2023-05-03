@@ -60,11 +60,11 @@ function move_one_random_task!(path_value::BitMatrix, graph::AbstractGraph)
 end
 
 """
-    local_search(solution::Solution, instance::Instance; nb_it::Integer=100)
+    local_search(solution::Solution, instance::AbstractInstance; nb_it::Integer=100)
 
 Very simple local search heuristic, using the neighborhood defined by `move_one_random_task`
 """
-function local_search(solution::Solution, instance::Instance; nb_it::Integer=100)
+function local_search(solution::Solution, instance::AbstractInstance; nb_it::Integer=100)
     best_solution = copy(solution.path_value)
     best_value = evaluate_solution(solution, instance)
     history_x = [0]
@@ -89,12 +89,12 @@ function local_search(solution::Solution, instance::Instance; nb_it::Integer=100
 end
 
 """
-    heuristic_solution(instance::Instance; nb_it=100)
+    heuristic_solution(instance::AbstractInstance; nb_it=100)
 
 Very simple heuristic, using [`local_search`](@ref)
     initialised with the solution of the deterministic Linear program
 """
-function heuristic_solution(instance::Instance; nb_it=100)
+function heuristic_solution(instance::AbstractInstance; nb_it=100)
     _, initial_solution = solve_deterministic_VSP(instance)
     sol, _, _, _ = local_search(initial_solution, instance; nb_it=nb_it)
     return sol

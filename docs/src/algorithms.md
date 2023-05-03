@@ -12,9 +12,28 @@ using StochasticVehicleScheduling
 using Random
 Random.seed!(1)  # fix the seed for reproducibility
 instance = create_random_instance(; nb_tasks=25, nb_scenarios=10)
-plot_instance_on_map(instance)
+
+using Plots
+fig = plot()
+for i in 1:(get_nb_tasks(instance) + 1)
+    task = instance.city.tasks[i]
+    (; start_point, end_point) = task
+    points = [(start_point.x, start_point.y), (end_point.x, end_point.y)]
+    plot!(fig, points; color=:black, label="")
+    scatter!(
+        fig,
+        points;
+        marker=:rect,
+        markersize=10,
+        label="",
+        series_annotations=[("$(i-1)", 9), ""],
+    )
+end
+savefig(fig, "instance.png"); # hide
+nothing #hide
 ````
 
+![instance](instance.png)
 ## Heuristic algorithms
 
 The first category of algorithms implemented are heuristics, which given good but not

@@ -4,9 +4,10 @@ using Cbc
 using ConstrainedShortestPaths
 using Distributions
 using Flux
-using GLMakie
+# using GLMakie
 using GLPK
 using Graphs
+using HiGHS
 using InferOpt
 using JLD2
 using JuMP
@@ -46,8 +47,6 @@ include("solution/heuristic_algorithms/local_search.jl")
 
 include("dataset/dataset.jl")
 
-include("visualization/map.jl")
-
 include("learning/easy_problem.jl")
 include("learning/dataset.jl")
 include("learning/trainer.jl")
@@ -55,16 +54,17 @@ include("learning/models.jl")
 include("learning/metrics.jl")
 include("learning/perf.jl")
 
-# Data strutures
-export create_random_city, create_random_instance
-export Instance, Solution
+# Data structures
+export create_random_city, create_random_instance, create_random_compact_instance
+export Instance, CompactInstance, Solution
+export get_nb_scenarios, get_nb_tasks
 export is_admissible
 
-export evaluate_solution, evaluate_solution2
+export evaluate_solution#, evaluate_solution2
 export Solution, solution_from_JuMP_array, basic_solution, get_routes, solution_from_paths
 
 # Solvers
-export cbc_model, glpk_model
+export cbc_model, glpk_model, highs_model
 export solve_deterministic_VSP, easy_problem
 export local_search, heuristic_solution
 export column_generation,
@@ -80,8 +80,5 @@ export save_config
 export Trainer
 export compute_metrics!
 export train_loop!
-
-# Visualization
-export plot_instance_on_map, plot_solution_on_map
 
 end

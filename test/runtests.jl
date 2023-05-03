@@ -3,18 +3,11 @@ using JuliaFormatter
 using StochasticVehicleScheduling
 using Test
 
-format(StochasticVehicleScheduling; verbose=true)
-
 include("subfiles/utils.jl")
 
 @testset verbose = true "StochasticVehicleScheduling.jl" begin
-    @testset "Code quality (Aqua.jl)" begin
-        Aqua.test_all(
-            StochasticVehicleScheduling;
-            deps_compat=false,
-            project_extras=true,
-            ambiguities=false,
-        )
+    @testset "Code" begin
+        include("subfiles/code.jl")
     end
 
     @testset "Tasks" begin

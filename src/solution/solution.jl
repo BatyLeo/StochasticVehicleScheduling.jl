@@ -42,11 +42,11 @@ function get_routes(solution::Solution)
 end
 
 """
-    Solution(value::BitVector, instance::Instance)
+    Solution(value::BitVector, instance::AbstractInstance)
 
 Create a Solution from a BitVector value.
 """
-function Solution(value::BitVector, instance::Instance)
+function Solution(value::BitVector, instance::AbstractInstance)
     graph = instance.graph
     nb_tasks = nv(graph)
     is_selected = falses(nb_tasks, nb_tasks)
@@ -61,11 +61,11 @@ function Solution(value::BitVector, instance::Instance)
 end
 
 """
-    Solution(value::BitVector, instance::Instance)
+    Solution(value::BitVector, instance::AbstractInstance)
 
 Create a Solution from a BitMatrix path value.
 """
-function Solution(path_value::BitMatrix, instance::Instance)
+function Solution(path_value::BitMatrix, instance::AbstractInstance)
     graph = instance.graph
     solution = falses(ne(graph))
 
@@ -81,11 +81,11 @@ function Solution(path_value::BitMatrix, instance::Instance)
 end
 
 """
-    solution_from_paths(paths, instance::Instance)
+    solution_from_paths(paths, instance::AbstractInstance)
 
 Create a Solution from routes.
 """
-function solution_from_paths(paths, instance::Instance)
+function solution_from_paths(paths, instance::AbstractInstance)
     (; graph) = instance
     mat = falses(nv(graph), nv(graph))
     for p in paths
@@ -103,7 +103,7 @@ function solution_from_paths(paths, instance::Instance)
 end
 
 """
-    solution_from_paths(paths, instance::Instance)
+    solution_from_paths(paths, instance::AbstractInstance)
 
 Create a Solution from a JuMP array.
 """
@@ -165,7 +165,7 @@ end
 
 Create a solution with one vehicle per task.
 """
-function basic_solution(instance::Instance)
+function basic_solution(instance::AbstractInstance)
     graph = instance.graph
     value = falses(ne(graph))
 
@@ -181,7 +181,7 @@ end
 """
     evaluate_task(
         i_task::Integer,
-        instance::Instance,
+        instance::AbstractInstance,
         old_task_index::Integer,
         old_delay::Real,
         scenario::Int,
@@ -192,7 +192,7 @@ Evaluate the total delay of task `i_task` in `scenario`, knowing that current de
 """
 function evaluate_task(
     i_task::Integer,
-    instance::Instance,
+    instance::AbstractInstance,
     old_task_index::Integer,
     old_delay::Real,
     scenario::Int,
@@ -206,13 +206,15 @@ function evaluate_task(
 end
 
 """
-    evaluate_scenario(path_value::BitMatrix, instance::Instance, scenario_index::Int)
+    evaluate_scenario(path_value::BitMatrix, instance::AbstractInstance, scenario_index::Int)
 
 Compute total delay of scenario.
 """
-function evaluate_scenario(path_value::BitMatrix, instance::Instance, scenario_index::Int)
+function evaluate_scenario(
+    path_value::BitMatrix, instance::AbstractInstance, scenario_index::Int
+)
     total_delay = 0.0
-    nb_tasks = instance.city.nb_tasks
+    nb_tasks = get_nb_tasks(instance)
 
     for i_vehicle in 1:nb_tasks
         # no delay if no tasks
@@ -240,70 +242,22 @@ function evaluate_scenario(path_value::BitMatrix, instance::Instance, scenario_i
 end
 
 """
-    evaluate_scenario2(path_value::BitMatrix, instance::Instance, scenario_index::Int)
-
-Compute total delay of each task in scenario.
-"""
-function evaluate_scenario2(path_value::BitMatrix, instance::Instance, scenario_index::Int)
-    total_delay = 0.0
-    nb_tasks = instance.city.nb_tasks
-
-    task_delays = zeros(nb_tasks)
-
-    for i_vehicle in 1:nb_tasks
-        # no delay if no tasks
-        if !any(@view path_value[i_vehicle, :])
-            continue
-        end
-
-        task_delay = 0.0
-        old_task_index = 1 # always start at depot
-
-        for i_task in 1:nb_tasks
-            # check if task is done by this vehicle
-            if !path_value[i_vehicle, i_task]
-                continue
-            end
-            task_delay = evaluate_task(
-                i_task + 1, instance, old_task_index, task_delay, scenario_index
-            )
-            old_task_index = i_task + 1
-
-            total_delay += task_delay
-            task_delays[i_task] = task_delay
-        end
-    end
-    return task_delays
-end
-
-"""
-    evaluate_scenario(solution::Solution, instance::Instance, scenario_index::Int)
+    evaluate_scenario(solution::Solution, instance::AbstractInstance, scenario_index::Int)
 
 Compute total delay of scenario.
 """
-function evaluate_scenario(solution::Solution, instance::Instance, scenario_index::Int)
+function evaluate_scenario(
+    solution::Solution, instance::AbstractInstance, scenario_index::Int
+)
     return evaluate_scenario(solution.path_value, instance, scenario_index)
 end
 
-function evaluate_solution2(path_value::BitMatrix, instance::Instance)
-    nb_scenarios = get_nb_scenarios(instance)
-
-    nb_tasks = instance.city.nb_tasks
-    average_delay = zeros(nb_tasks)
-    for s in 1:nb_scenarios
-        average_delay .+= evaluate_scenario2(path_value, instance, s)
-    end
-    average_delay ./= nb_scenarios
-
-    return average_delay
-end
-
 """
-    evaluate_scenario(path_value::BitMatrix, instance::Instance, scenario_index::Int)
+    evaluate_scenario(path_value::BitMatrix, instance::AbstractInstance, scenario_index::Int)
 
 Compute total weighted objective of solution.
 """
-function evaluate_solution(path_value::BitMatrix, instance::Instance)
+function evaluate_solution(path_value::BitMatrix, instance::AbstractInstance)
     nb_scenarios = get_nb_scenarios(instance)
 
     average_delay = 0.0
@@ -313,32 +267,23 @@ function evaluate_solution(path_value::BitMatrix, instance::Instance)
     average_delay /= nb_scenarios
 
     nb_vehicles = sum(any(path_value; dims=2))
-    return instance.city.vehicle_cost * nb_vehicles +
-           instance.city.delay_cost * average_delay
+    return instance.vehicle_cost * nb_vehicles + instance.delay_cost * average_delay
 end
 
 """
-    evaluate_scenario(path_value::BitMatrix, instance::Instance, scenario_index::Int)
+    evaluate_scenario(path_value::BitMatrix, instance::AbstractInstance, scenario_index::Int)
 
 Compute total weighted objective of solution.
 """
-function evaluate_solution(solution::Solution, instance::Instance)
+function evaluate_solution(solution::Solution, instance::AbstractInstance)
     return evaluate_solution(solution.path_value, instance)
 end
 
-function evaluate_solution2(solution::Solution, instance::Instance)
-    return evaluate_solution2(solution.path_value, instance)
-end
-
-function evaluate_solution(value::BitVector, instance::Instance)
+function evaluate_solution(value::BitVector, instance::AbstractInstance)
     return evaluate_solution(Solution(value, instance), instance)
 end
 
-function evaluate_solution2(value::BitVector, instance::Instance)
-    return evaluate_solution2(Solution(value, instance), instance)
-end
-
-function to_array(path_value::BitMatrix, instance::Instance)
+function to_array(path_value::BitMatrix, instance::AbstractInstance)
     graph = instance.graph
     nb_nodes = nv(graph)
     nb_tasks = nb_nodes - 2
@@ -373,21 +318,21 @@ function to_array(path_value::BitMatrix, instance::Instance)
 end
 
 """
-    to_array(solution::Solution, instance::Instance)
+    to_array(solution::Solution, instance::AbstractInstance)
 
 Returns a BitMatrix, with value true at each index (i, j) if corresponding edge of graph
 is selected in the solution
 """
-function to_array(solution::Solution, instance::Instance)
+function to_array(solution::Solution, instance::AbstractInstance)
     return to_array(solution.path_value, instance)
 end
 
 """
-    is_admissible(solution::Solution, instance::Instance)
+    is_admissible(solution::Solution, instance::AbstractInstance)
 
 Check if `solution` is an admissible solution of `instance`.
 """
-function is_admissible(solution::Solution, instance::Instance)
+function is_admissible(solution::Solution, instance::AbstractInstance)
     graph = instance.graph
     nb_nodes = nv(graph)
     nb_tasks = nb_nodes - 2
