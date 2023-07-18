@@ -6,11 +6,13 @@ end
 @testset "Correctness (JET.jl)" begin
     using JET
     using JLD2
+    using NamedTupleTools
+    using Core.Compiler
     if VERSION >= v"1.8"
         JET.test_package(
             StochasticVehicleScheduling;
             toplevel_logger=nothing,
-            ignored_modules=(JLD2, Base),
+            ignored_modules=(JLD2, Base, NamedTupleTools, Core.Compiler),
             mode=:typo,
         )
     end
