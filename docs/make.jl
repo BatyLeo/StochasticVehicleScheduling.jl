@@ -2,6 +2,9 @@ using Documenter
 using Literate
 using StochasticVehicleScheduling
 
+ENV["PLOTS_TEST"] = "true"
+ENV["GKSwstype"] = "100"
+
 md_dir = joinpath(@__DIR__, "src")
 literate_dir = joinpath(dirname(@__DIR__), "docs", "src", "literate")
 jl_files = readdir(literate_dir)  # joinpath(literate_dir, "tutorial.jl")
