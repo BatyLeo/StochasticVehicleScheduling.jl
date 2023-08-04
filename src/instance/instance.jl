@@ -26,7 +26,7 @@ end
 """
     CompactInstance{G<:AbstractGraph,M1,M2,C}
 
-Instance of the stochastic VSP problem.
+Same as [`Instance`](@ref), but does not contain the `city field`.
 
 # Fields
 - `graph::G`: graph computed from `city` with the `create_VSP_graph(city::City)` method.
@@ -72,6 +72,11 @@ function CompactInstance(city::City)
     return CompactInstance(
         graph, features, slacks, delays, city.vehicle_cost, city.delay_cost
     )
+end
+
+function CompactInstance(instance::Instance)
+    (; graph, features, slacks, delays, vehicle_cost, delay_cost) = instance
+    return CompactInstance(graph, features, slacks, delays, vehicle_cost, delay_cost)
 end
 
 """

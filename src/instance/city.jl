@@ -361,9 +361,6 @@ function compute_features(city::City)
             mean(slacks .<= x) for x in cumul
         ]
     end
-    #
-    # features[1] += features[2]
-    # return features[1:end-1]
     return features
 end
 

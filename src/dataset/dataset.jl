@@ -74,7 +74,7 @@ function generate_samples(
     else
         Y = [solve_scenarios(x; model_builder=model_builder)[2] for x in X]
     end
-    return X, Y
+    return [CompactInstance(x) for x in X], [y.value for y in Y]
 end
 
 """

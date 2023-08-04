@@ -11,3 +11,4 @@ Manifest.toml
 scripts/*.toml
 /data1
 /data_old
+.vscode
