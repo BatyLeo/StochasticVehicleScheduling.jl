@@ -11,3 +11,6 @@ Manifest.toml
 scripts/*.toml
 /data1
 /data_old
+_scripts
+_src
+_logs
