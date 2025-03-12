@@ -1,9 +1,11 @@
 include("00_config.jl")
 
 data = JLD2.load(dataset_path);
-dataset_25 = data["dataset_25"];
-dataset_50 = data["dataset_50"];
-dataset_100 = data["dataset_100"];
+train_set_25 = data["train_set_25"];
+val_set_25 = data["val_set_25"];
+test_set_25 = data["test_set_25"];
+test_set_50 = data["test_set_50"];
+test_set_100 = data["test_set_100"];
 
 res_data = JLD2.load(results_path)
 supervised_model = res_data["supervised_model"]

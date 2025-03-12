@@ -7,9 +7,8 @@ using ProgressMeter: @showprogress
 using UnicodePlots: lineplot
 
 data = JLD2.load(dataset_path);
-dataset_25 = data["dataset_25"];
-dataset_50 = data["dataset_50"];
-dataset_100 = data["dataset_100"];
+train_set_25 = data["train_set_25"];
+val_set_25 = data["val_set_25"];
 
 b = StochasticVehicleSchedulingBenchmark()
 
@@ -17,7 +16,7 @@ b = StochasticVehicleSchedulingBenchmark()
 model = generate_statistical_model(b; seed=0)
 
 # CO layer and losses
-maximizer = generate_maximizer(b)
+maximizer = generate_maximizer(b; model_builder)
 
 perturbed = PerturbedAdditive(maximizer; ε=1.0, nb_samples=20)
 fyl_loss = FenchelYoungLoss(perturbed)

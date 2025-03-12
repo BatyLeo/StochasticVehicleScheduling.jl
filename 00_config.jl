@@ -12,3 +12,6 @@ mkpath(logdir)
 dataset_path = joinpath(logdir, "datasets.jld2")
 test_dataset_path = joinpath(logdir, "test_datasets.jld2")
 results_path = joinpath(logdir, "results.jld2")
+
+using Gurobi: Gurobi
+model_builder = grb_model # mip solver
