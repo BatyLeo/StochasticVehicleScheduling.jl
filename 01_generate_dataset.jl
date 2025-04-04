@@ -11,19 +11,20 @@ b = StochasticVehicleSchedulingBenchmark(; nb_tasks=25, nb_scenarios=10)
 b_50 = StochasticVehicleSchedulingBenchmark(; nb_tasks=50, nb_scenarios=50)
 b_100 = StochasticVehicleSchedulingBenchmark(; nb_tasks=100, nb_scenarios=50)
 
-dataset_25 = generate_dataset(b, 150; algorithm=compact_mip, model_builder, silent=false);
-dataset_50 = generate_dataset(b_50, 150; algorithm=local_search, num_iterations);
-dataset_100 = generate_dataset(b_100, 150; algorithm=local_search, num_iterations);
-
-train_set_25, val_set_25, test_set_25 = splitobs(dataset_25; at=(50, 50));
-train_set_50, val_set_50, test_set_50 = splitobs(dataset_50; at=(50, 50));
-train_set_100, val_set_100, test_set_100 = splitobs(dataset_100; at=(50, 50));
+dataset_25 = generate_dataset(b, 150; seed=0, algorithm=compact_mip, model_builder, silent=false); # model_builder can be omitted if Gurobi is not available
+dataset_50 = generate_dataset(b_50, 150; seed=0, algorithm=local_search, num_iterations);
+dataset_100 = generate_dataset(b_100, 150; seed=0, algorithm=local_search, num_iterations);
 
 # Feature normalization
+train_set_25, _, __ = splitobs(dataset_25; at=(50, 50));
 dt = StatsBase.fit(StatsBase.ZScoreTransform, train_set_25; center=false, scale=true);
 StatsBase.transform!(dt, dataset_25)
 StatsBase.transform!(dt, dataset_50)
 StatsBase.transform!(dt, dataset_100)
+
+train_set_25, val_set_25, test_set_25 = splitobs(dataset_25; at=(50, 50));
+train_set_50, val_set_50, test_set_50 = splitobs(dataset_50; at=(50, 50));
+train_set_100, val_set_100, test_set_100 = splitobs(dataset_100; at=(50, 50));
 
 JLD2.jldsave(dataset_path; dataset_25, dataset_50, dataset_100, dt)
 

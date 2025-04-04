@@ -28,9 +28,22 @@ perturbed_regret = Pushforward(perturbed, cost)
 supervised_loss(sample, m) = fyl_loss(m(sample.x), sample.y_true; instance=sample.instance)
 experience_loss(sample, m) = perturbed_regret(m(sample.x); instance=sample.instance)
 
+sample = dataset_25[1]
+sample.x
+sample.y_true
+sample.instance
+model(sample.x)
+maximizer(model(sample.x); instance=sample.instance)
+cost(sample.y_true; sample.instance)
+cost(maximizer(model(sample.x); instance=sample.instance); sample.instance)
+supervised_loss(sample, model)
+experience_loss(sample, model)
+
 function train_model!(
     model, maximizer, train_set, val_set, loss; nb_epochs=50, optimizer=Adam()
 )
+    train_costs = []
+    val_costs = []
     loss_history = [mapreduce(d -> loss(d, model), +, train_set) / numobs(train_set)]
     gap_history = [compute_gap(b, val_set, model, maximizer)]
     best_model = deepcopy(model)
@@ -38,6 +51,8 @@ function train_model!(
 
     opt_state = Flux.setup(optimizer, model)
     for e in 1:nb_epochs
+        push!(train_costs, mean([evaluate_solution(maximizer(model(i.x); instance=i.instance), i.instance) for i in train_set]),)
+        push!(val_costs, mean([evaluate_solution(maximizer(model(i.x); instance=i.instance), i.instance) for i in val_set]),)
         loss_sum = 0.0
         g = round(gap_history[end] * 100; digits=1)
         @showprogress desc = "Epoch $e gap: $g% |" for sample in train_set
@@ -55,22 +70,26 @@ function train_model!(
         end
     end
 
-    return best_model, loss_history, gap_history
+    push!(train_costs, mean([evaluate_solution(maximizer(best_model(i.x); instance=i.instance), i.instance) for i in train_set]),)
+    push!(val_costs, mean([evaluate_solution(maximizer(best_model(i.x); instance=i.instance), i.instance) for i in val_set]),)
+    return best_model, train_costs, val_costs, loss_history, gap_history
 end
 
-supervised_model, supervised_loss_history, supervised_gap_history = train_model!(
-    deepcopy(model), maximizer, train_set_25, val_set_25, supervised_loss; nb_epochs=50
+supervised_model, supervised_train, supervised_val, supervised_loss_history, supervised_gap_history = train_model!(
+    deepcopy(model), maximizer, train_set_25, val_set_25, supervised_loss; nb_epochs=200
 )
-experience_model, experience_loss_history, experience_gap_history = train_model!(
+experience_model, experience_train, experience_val, experience_loss_history, experience_gap_history = train_model!(
     deepcopy(model), maximizer, train_set_25, val_set_25, experience_loss; nb_epochs=100
 )
 
-JLD2.jldsave(
-    results_path;
-    supervised_model,
-    experience_model,
-    supervised_loss_history,
-    experience_loss_history,
-    supervised_gap_history,
-    experience_gap_history,
-)
+JLD2.jldsave("logs/SL_trained.jld2"; model=supervised_model, gaps=supervised_gap_history)
+JLD2.jldsave("logs/RM_trained.jld2"; model=experience_model, gaps=experience_gap_history)
+# JLD2.jldsave(
+#     results_path;
+#     supervised_model,
+#     experience_model,
+#     supervised_loss_history,
+#     experience_loss_history,
+#     supervised_gap_history,
+#     experience_gap_history,
+# )
