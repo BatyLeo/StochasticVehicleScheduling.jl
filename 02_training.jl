@@ -82,6 +82,23 @@ experience_model, experience_train, experience_val, experience_loss_history, exp
     deepcopy(model), maximizer, train_set_25, val_set_25, experience_loss; nb_epochs=100
 )
 
+function sl_runs(seeds)
+    all_results = []
+    for s in seeds
+        model = generate_statistical_model(b; seed=s)
+        sl_model, train_hist, val_hist, supervised_loss_history, supervised_gap_history = train_model!(
+            deepcopy(model), maximizer, train_set_25, val_set_25, supervised_loss; nb_epochs=200
+        )
+        final_tr = [evaluate_solution(maximizer(sl_model(i.x); instance=i.instance), i.instance) for i in train_set_25]
+        final_te = [evaluate_solution(maximizer(sl_model(i.x); instance=i.instance), i.instance) for i in test_set_100]
+        push!(all_results, (seed=s, model=sl_model, train_rew=train_hist, val_rew=val_hist, train_final=final_tr, test_final=final_te))
+    end
+    return all_results
+end
+
+sl_results = sl_runs([1, 2, 3, 4, 5, 6, 7, 8, 9])
+JLD2.jldsave("logs/svsp_sl_random_seeds.jld2"; results=sl_results)
+
 JLD2.jldsave("logs/SL_trained.jld2"; model=supervised_model, gaps=supervised_gap_history)
 JLD2.jldsave("logs/RM_trained.jld2"; model=experience_model, gaps=experience_gap_history)
 # JLD2.jldsave(

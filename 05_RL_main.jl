@@ -26,25 +26,30 @@ maximizer = generate_maximizer(b)
 
 # RL training
 IL_model, train_IL, val_IL, gaps_IL, losses_IL = IL_training(deepcopy(model), train_set_25, val_set_25;
-    nb_epochs=200, batch_size=4, no_samples=20, sigma_values=[0.5, 0.05], lr_values = [5e-3, 1e-3], soft=true, temp=1e0
+    nb_epochs=200, batch_size=4, no_samples=20, sigma_values=[0.5, 0.05], lr_values = [5e-3, 1e-3], soft=true, temp_values=[10.0, 0.1]
 )
 # temp: 1e0, 1e2, 1e3, 1e4, 1e5
-# sigma = [0.5, 0.05], lr = [1e-2, 5e-3], temp = 1e5
-# nb_epochs=200, batch_size=4, no_samples=20, sigma_values=[0.5, 0.05], lr_values = [1e-3, 1e-3]
+# 1st best: sigma = [0.1, 0.01], lr = [0.01, 0.005], temp = [10000.0, 100.0]
+# 2nd best: sigma = [0.5, 0.05], lr = [1e-2, 5e-3], temp = 1e5
 
-function IL_test(sigma_steps, lr_steps, temp_steps; soft=true)
+function IL_test(sigma_steps, lr_steps, temp_steps, seeds; soft=true)
     final_train = []
     final_val = []
     all_rews = []
     for i in sigma_steps
         for j in lr_steps
             for k in temp_steps
-                IL_model, train_IL, val_IL, gaps_IL, losses_IL = IL_training(deepcopy(model), train_set_25, val_set_25;
-                    nb_epochs=200, batch_size=4, no_samples=20, sigma_values=i, lr_values = j, soft=true, temp=k
-                )
-                push!(all_rews, (sigma=i, lr=j, temp=k, model=deepcopy(IL_model), train_rew=train_IL, val_rew=val_IL))
-                push!(final_train, train_IL[end])
-                push!(final_val, val_IL[end])
+                for s in seeds
+                    model = generate_statistical_model(b; seed=s)
+                    IL_model, train_IL, val_IL, gaps_IL, losses_IL = IL_training(deepcopy(model), train_set_25, val_set_25;
+                        nb_epochs=200, batch_size=4, no_samples=20, sigma_values=i, lr_values = j, soft=true, temp_values=k
+                    )
+                    final_tr = [evaluate_solution(maximizer(IL_model(i.x); instance=i.instance), i.instance) for i in train_set_25]
+                    final_te = [evaluate_solution(maximizer(IL_model(i.x); instance=i.instance), i.instance) for i in test_set_100]
+                    push!(all_rews, (sigma=i, lr=j, temp=k, seed=s, model=deepcopy(IL_model), train_rew=train_IL, val_rew=val_IL, train_final=final_tr, test_final=final_te))
+                    push!(final_train, train_IL[end])
+                    push!(final_val, val_IL[end])
+                end
             end
         end
     end
@@ -54,13 +59,52 @@ end
 train_rews, val_rews, all_rews = IL_test(
     [[1.0, 0.5], [0.5, 0.05], [0.1, 0.01]],
     [[1e-2, 5e-3], [5e-3, 1e-3], [1e-3, 5e-4]],
-    [1e0, 1e2, 1e3, 1e4, 1e5]
+    [[1e5, 1e0], [1e4, 1e2], [1e5, 1e3]],
+    [0]
 )
+il_train, il_val, il_results = IL_test([[0.1, 0.01]], [[0.01, 0.005]], [[10000.0, 100.0]], [1, 2, 3, 4, 5, 6, 7, 8, 9])
+JLD2.jldsave("logs/svsp_il_random_seeds.jld2"; results=il_results)
+
+train_idx = partialsortperm(train_rews, rev=false, 1:4)
+val_idx = partialsortperm(val_rews, rev=false, 1:4)
+mean_rews = [(train_rews[i] + val_rews[i]) / 2 for i in 1:length(train_rews)]
+mean_idx = partialsortperm(mean_rews, rev=false, 1:4)
+train_rews[train_idx]
+val_rews[val_idx]
+all_rews[20]
+IL_model = all_rews[20].model
+train_IL = all_rews[20].train_rew
+val_IL = all_rews[20].val_rew
 
 PPO_model, train_PPO, val_PPO, gaps_PPO, losses_PPO = PPO_training(deepcopy(model), train_set_25, val_set_25;
     nb_epochs=200, batch_size=4, clip=0.2, sigma_values=[0.5, 0.5], lr_values = [1e-2, 1e-2]
 )
 # nb_epochs=400, batch_size=4, clip=0.2, sigma_values=[0.5, 0.1], lr_values = [1e-2, 1e-2]
+
+function PPO_runs(sigma_steps, lr_steps, seeds; soft=true)
+    final_train = []
+    final_val = []
+    all_rews = []
+    for i in sigma_steps
+        for j in lr_steps
+            for s in seeds
+                model = generate_statistical_model(b; seed=s)
+                PPO_model, train_PPO, val_PPO, gaps_PPO, losses_PPO = PPO_training(deepcopy(model), train_set_25, val_set_25;
+                    nb_epochs=200, batch_size=4, clip=0.2, sigma_values=i, lr_values = j
+                )
+                final_tr = [evaluate_solution(maximizer(PPO_model(i.x); instance=i.instance), i.instance) for i in train_set_25]
+                final_te = [evaluate_solution(maximizer(PPO_model(i.x); instance=i.instance), i.instance) for i in test_set_100]
+                push!(all_rews, (sigma=i, lr=j, seed=s, model=deepcopy(PPO_model), train_rew=train_PPO, val_rew=val_PPO, train_final=final_tr, test_final=final_te))
+                push!(final_train, train_PPO[end])
+                push!(final_val, val_PPO[end])
+            end
+        end
+    end
+    return final_train, final_val, all_rews
+end
+
+ppo_train, ppo_val, ppo_results = PPO_runs([[0.5, 0.1]], [[1e-2, 1e-2]], [1, 2, 3, 4, 5, 6, 7, 8, 9])
+JLD2.jldsave("logs/svsp_ppo_random_seeds.jld2"; results=ppo_results)
 
 # RL tests
 compute_gap(b, train_set_25, IL_model, maximizer) # 0.0028470525704966253

@@ -16,7 +16,7 @@ function reward_comparison(train_rew, val_rew)
 end
 
 function IL_training(
-    model, train_set, val_set; nb_epochs=100, batch_size = 10, no_samples = 20, sigma_values=[0.05, 0.05], lr_values = [1e-3, 1e-3], soft=false, temp=1.0
+    model, train_set, val_set; nb_epochs=100, batch_size = 10, no_samples = 20, sigma_values=[0.05, 0.05], lr_values = [1e-3, 1e-3], soft=false, temp_values=[10.0, 0.1]
 )
     loss = FenchelYoungLoss(PerturbedAdditive(maximizer; ε=1.0, nb_samples=20))
     opt = Flux.Optimise.Adam(lr_values[1])
@@ -31,13 +31,15 @@ function IL_training(
     prob(θ, eps) = MvNormal(θ, eps * I)
     sigma = sigma_values[1]
     sigma_step = (sigma_values[1] - sigma_values[2]) / nb_epochs
+    temp = temp_values[1]
+    temp_step = (temp_values[1] - temp_values[2]) / nb_epochs
 
     losses = Float64[]
     for e in 1:nb_epochs
         push!(train_costs, mean([evaluate_solution(maximizer(model(i.x); instance=i.instance), i.instance) for i in train_set]),)
         push!(val_costs, mean([evaluate_solution(maximizer(model(i.x); instance=i.instance), i.instance) for i in val_set]),)
         push!(gap_history, compute_gap(b, val_set, model, maximizer),)
-        @info e, "sigma:", sigma, "lr", lr_values[1], "train:", train_costs[end], "val:", val_costs[end], "gap:", gap_history[end]
+        @info e, "sigma:", sigma, "lr:", lr_values[1], "temp:", temp, "train:", train_costs[end], "val:", val_costs[end], "gap:", gap_history[end]
         if reward_comparison(train_costs, val_costs)
             best_model = deepcopy(model)
             best_episode = e
@@ -77,6 +79,7 @@ function IL_training(
         sigma = max(sigma - sigma_step, sigma_values[2])
         lr = opt.eta
         opt.eta = max(lr - lr_step, lr_values[2])
+        temp = max(temp - temp_step, temp_values[2])
     end
 
     push!(train_costs, mean([evaluate_solution(maximizer(best_model(i.x); instance=i.instance), i.instance) for i in train_set]),)

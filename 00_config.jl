@@ -1,6 +1,6 @@
 using DecisionFocusedLearningBenchmarks
 using DecisionFocusedLearningBenchmarks.StochasticVehicleScheduling:
-    evaluate_solution, compact_mip, local_search
+    evaluate_solution, compact_mip, local_search, deterministic_mip
 using JLD2: JLD2
 using StatsBase: StatsBase
 using MLUtils: splitobs, numobs
