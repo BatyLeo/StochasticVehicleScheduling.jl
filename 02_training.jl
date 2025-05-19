@@ -81,6 +81,8 @@ supervised_model, supervised_train, supervised_val, supervised_loss_history, sup
 experience_model, experience_train, experience_val, experience_loss_history, experience_gap_history = train_model!(
     deepcopy(model), maximizer, train_set_25, val_set_25, experience_loss; nb_epochs=100
 )
+sl_runtime = @timed train_model!(deepcopy(model), maximizer, train_set_25, val_set_25, supervised_loss; nb_epochs=200)
+sl_runtime.time
 
 function sl_runs(seeds)
     all_results = []
@@ -90,7 +92,7 @@ function sl_runs(seeds)
             deepcopy(model), maximizer, train_set_25, val_set_25, supervised_loss; nb_epochs=200
         )
         final_tr = [evaluate_solution(maximizer(sl_model(i.x); instance=i.instance), i.instance) for i in train_set_25]
-        final_te = [evaluate_solution(maximizer(sl_model(i.x); instance=i.instance), i.instance) for i in test_set_100]
+        final_te = [evaluate_solution(maximizer(sl_model(i.x); instance=i.instance), i.instance) for i in test_set_25]
         push!(all_results, (seed=s, model=sl_model, train_rew=train_hist, val_rew=val_hist, train_final=final_tr, test_final=final_te))
     end
     return all_results
