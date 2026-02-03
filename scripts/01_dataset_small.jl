@@ -8,48 +8,48 @@ end
 
 # List of settings for which we create a dataset
 const settings = [
+    # (
+    #     nb_tasks=25,
+    #     nb_scenarios=10,
+    #     labeled=true,
+    #     heuristic=false,
+    #     train=10,
+    #     val=10,
+    #     test=10,
+    # ),
+    # (nb_tasks=50, nb_scenarios=10, labeled=true, heuristic=true, train=10, val=10, test=10),
+    # (
+    #     nb_tasks=100,
+    #     nb_scenarios=10,
+    #     labeled=false,
+    #     heuristic=true,
+    #     train=10,
+    #     val=10,
+    #     test=10,
+    # ),
+    # (nb_tasks=200, nb_scenarios=10, labeled=false, heuristic=true, train=0, val=0, test=10),
+    # (nb_tasks=500, nb_scenarios=10, labeled=false, heuristic=true, train=0, val=0, test=10),
+    # (
+    #     nb_tasks=1000,
+    #     nb_scenarios=10,
+    #     labeled=false,
+    #     heuristic=true,
+    #     train=0,
+    #     val=0,
+    #     test=10,
+    # ),
     (
-        nb_tasks=25,
-        nb_scenarios=10,
-        labeled=true,
-        heuristic=false,
-        train=10,
-        val=10,
-        test=10,
-    ),
-    (nb_tasks=50, nb_scenarios=10, labeled=true, heuristic=true, train=10, val=10, test=10),
-    (
-        nb_tasks=100,
-        nb_scenarios=10,
-        labeled=false,
-        heuristic=true,
-        train=10,
-        val=10,
-        test=10,
-    ),
-    (nb_tasks=200, nb_scenarios=10, labeled=false, heuristic=true, train=0, val=0, test=10),
-    (nb_tasks=500, nb_scenarios=10, labeled=false, heuristic=true, train=0, val=0, test=10),
-    (
-        nb_tasks=1000,
+        nb_tasks=10000,
         nb_scenarios=10,
         labeled=false,
         heuristic=true,
         train=0,
         val=0,
-        test=10,
-    ),
-    (
-        nb_tasks=5000,
-        nb_scenarios=10,
-        labeled=false,
-        heuristic=true,
-        train=0,
-        val=0,
-        test=10,
+        test=1,
     ),
 ]
 
-function create_all_datasets(settings, data_dir="/libre/batyl/data/StoVSP/sparse")
+function create_all_datasets(settings, data_dir="/libre/batyl/data/StoVSP")
     model_builder = cbc_model
     try
         model_builder = grb_model
@@ -79,4 +79,4 @@ function create_all_datasets(settings, data_dir="/libre/batyl/data/StoVSP/sparse
     end
 end
 
-create_all_datasets(settings)
+create_all_datasets(settings, ".")

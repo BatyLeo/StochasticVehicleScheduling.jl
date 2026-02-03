@@ -1,6 +1,8 @@
 using Random  # TODO: move seed into trainer/training loop
 using StochasticVehicleScheduling
 
+using Gurobi
+
 function main_imitation()
     files = [
         "25tasks10scenarios.yaml", "50tasks50scenarios.yaml", "100tasks50scenarios.yaml"
@@ -25,5 +27,5 @@ function main_experience()
     end
 end
 
-main_imitation()
+# main_imitation()
 main_experience()

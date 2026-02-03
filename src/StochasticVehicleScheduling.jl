@@ -4,7 +4,6 @@ using Cbc
 using ConstrainedShortestPaths
 using Distributions
 using Flux
-# using GLMakie
 using GLPK
 using Graphs
 using HiGHS
@@ -60,7 +59,7 @@ export Instance, CompactInstance, Solution
 export get_nb_scenarios, get_nb_tasks
 export is_admissible
 
-export evaluate_solution#, evaluate_solution2
+export evaluate_solution
 export Solution, solution_from_JuMP_array, basic_solution, get_routes, solution_from_paths
 
 # Solvers

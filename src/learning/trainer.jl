@@ -96,7 +96,7 @@ function Trainer(config; create_logger=true)
     # Optimizer
     (; name, args) = config.train.optimizer
     if isnothing(args)
-        opt = eval(Meta.parse(name))
+        opt = eval(Meta.parse(name))()
     else
         opt = eval(Meta.parse(name))(args...)
     end
@@ -167,11 +167,9 @@ function save_model(trainer::Trainer, epoch::Integer; best=false)
 end
 
 function my_custom_train!(loss, ps, data, opt)
-    local training_loss
     for batch in data
-        gs = gradient(ps) do
-            training_loss = loss(batch...)
-            return training_loss
+        gs = Flux.gradient(ps) do
+            return loss(batch...)
         end
         Flux.update!(opt, ps, gs)
     end
@@ -184,7 +182,6 @@ function train_loop!(trainer::Trainer; show_progress=true)
     compute_metrics!(trainer, 0)
     for n in 1:nb_epochs
         my_custom_train!(loss, Flux.params(pipeline.encoder), data.loader, opt)
-        #Flux.train!(trainer.loss, Flux.params(trainer.pipeline.encoder), loader(trainer.data.train), trainer.opt)
         compute_metrics!(trainer, n)
         save_model(trainer, n)
         next!(p)

@@ -1,0 +1,27 @@
+train:
+  batchsize: 1
+  save_every_n_epochs: 50
+  metrics:
+    train: ~
+    train_and_validation:
+      - "Loss"
+      - "AllCosts"
+    validation: ~
+  tag: "imitation_100tasks50scenarios"
+  optimizer:
+    name: "ADAM"
+    args: ~
+  nb_epochs: 50
+  log_dir: "logs"
+  log_every_n_epochs: 1
+model:
+  name: "FenchelYoungGLM"
+  args:
+    M: 20
+    nb_features: 20
+    ε: 0.1
+    model_builder: "grb_model"
+data:
+  validation_file: "validation.jld2"
+  data_dir: "/libre/batyl/data/StoVSP/100tasks50scenarios"
+  train_file: "train.jld2"

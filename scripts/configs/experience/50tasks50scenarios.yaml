@@ -1,19 +1,19 @@
 data:
-  data_dir: "data/50tasks50scenarios"
+  data_dir: "/libre/batyl/data/StoVSP/50tasks50scenarios"
   train_file: "train.jld2"
   validation_file: "validation.jld2"
 train:
   log_dir: "logs"
-  tag: "experience_50tasks50scenariosDescent"
+  tag: "experience_50tasks50scenarios"
   batchsize: 1
   metrics:
     train_and_validation:
       - "Loss"
-      - "AllCosts"
+      - "AvgCostPerTask"
     train:
     validation:
   optimizer:
-    name: "Descent(1e-6)"
+    name: "Adam"
     args:
   nb_epochs: 200
   save_every_n_epochs: 100
@@ -23,5 +23,5 @@ model:
   args:
     M: 20
     nb_features: 20
-    ε: 100
+    ε: 5
     model_builder: "grb_model"

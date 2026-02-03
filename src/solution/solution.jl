@@ -141,10 +141,13 @@ function path_solution_from_JuMP_array(x::AbstractArray, graph::AbstractGraph)
                 @info current_task
                 @info outneighbors(graph, current_task)
                 @info [x[current_task, i] for i in outneighbors(graph, current_task)]
+                display(x)
                 current_task = nb_tasks
+                throw(DomainError(x, "No selected out neighbour..."))
             elseif length(next_tasks) > 1
                 @warn "Flow constraint is broken..."
                 current_task = next_tasks[1]
+                throw(DomainError(x, "Flow constraint is broken..."))
             end
         end
     end

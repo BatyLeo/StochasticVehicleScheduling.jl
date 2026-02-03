@@ -19,7 +19,7 @@ function easy_problem(
     @objective(
         model,
         Max,
-        sum(θ[i] * y[edge.src, edge.dst] for (i, edge) in enumerate(edges(graph)))
+        sum(θ[i] * y[src(edge), dst(edge)] for (i, edge) in enumerate(edges(graph)))
     )
 
     @constraint(
@@ -36,7 +36,7 @@ function easy_problem(
 
     solution = falses(ne(graph))
     for (i, edge) in enumerate(edges(graph))
-        if isapprox(value(y[edge.src, edge.dst]), 1; atol=1e-3)
+        if isapprox(value(y[src(edge), dst(edge)]), 1; atol=1e-1)
             solution[i] = true
         end
     end

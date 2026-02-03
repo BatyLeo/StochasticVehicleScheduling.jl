@@ -67,9 +67,7 @@ function (m::AllCosts)(trainer::Trainer; train, epoch, Y_pred, kwargs...)
         maximum(
             (c - c_opt) / abs(c_opt) for (c, c_opt) in zip(train_cost, train_cost_opt)
         ) * 100
-    average_cost_per_task = mean(
-        c / x.city.nb_tasks for (c, c_opt, x) in zip(train_cost, train_cost_opt, data.X)
-    )
+    average_cost_per_task = mean(c / get_nb_tasks(x) for (c, x) in zip(train_cost, data.X))
 
     if !train && average_cost_per_task < m.best_value
         m.best_value = average_cost_per_task
@@ -86,6 +84,44 @@ function log_last_measure!(
         @info "$str" average_cost_gap = m.average_cost_gap[end] log_step_increment =
             step_increment
         @info "$str" max_cost_gap = m.max_cost_gap[end] log_step_increment = 0
+        @info "$str" average_cost_per_task = m.average_cost_per_task[end] log_step_increment =
+            0
+    end
+end
+
+mutable struct AvgCostPerTask <: AbstractMetric
+    name::String
+    best_value::Float64
+    average_cost_per_task::Vector{Float64}
+end
+
+AvgCostPerTask(name="All costs") = AvgCostPerTask(name, Inf, Float64[])
+
+function compute_value!(m::AvgCostPerTask, t::Trainer; kwargs...)
+    c = m(t; kwargs...)
+    push!(m.average_cost_per_task, c)
+    return nothing
+end
+
+function (m::AvgCostPerTask)(trainer::Trainer; train, epoch, Y_pred, kwargs...)
+    (; cost) = trainer
+    data = train ? trainer.data.train : trainer.data.validation
+    train_cost = [cost(y; instance=x) for (x, y) in zip(data.X, Y_pred)]
+
+    average_cost_per_task = mean(c / get_nb_tasks(x) for (c, x) in zip(train_cost, data.X))
+
+    if !train && average_cost_per_task < m.best_value
+        m.best_value = average_cost_per_task
+        save_model(trainer, epoch; best=true)
+    end
+    return average_cost_per_task
+end
+
+function log_last_measure!(
+    m::AvgCostPerTask, logger::AbstractLogger; train=true, step_increment=0
+)
+    str = train ? "train" : "validation"
+    with_logger(logger) do
         @info "$str" average_cost_per_task = m.average_cost_per_task[end] log_step_increment =
             0
     end
